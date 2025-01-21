@@ -1,0 +1,14 @@
+{
+  "name": "com.alasdair.graphtools",
+  "version": "1.0.0",
+  "displayName": "Al GraphTools",
+  "description": "A Tool allowing easy Node graphs with Unity's GraphView package",
+  "unity": "2022.3",
+  "unityRelease": "30f1",
+  "dependencies": {
+  },
+  "author": {
+    "name": "Alasdair",
+    "email": "alasdairpilmorebedford@gmail.com.com"
+  }
+}

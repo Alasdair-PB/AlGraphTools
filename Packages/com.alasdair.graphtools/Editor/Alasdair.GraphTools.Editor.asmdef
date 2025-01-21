@@ -1,0 +1,16 @@
+{
+    "name": "Alasdair.GraphTools.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:e2ff5bda563f7274c95be1b57d7ce9a3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
