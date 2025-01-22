@@ -44,7 +44,6 @@ namespace GT.Windows
                     level = 2
                 }
             };
-
             return searchTreeEntries;
         }
 
@@ -57,25 +56,18 @@ namespace GT.Windows
                 case GTNodeType.SingleChoice:
                 {
                     GTSingleChoiceNode singleChoiceNode = (GTSingleChoiceNode) graphView.CreateNode("NodeName", GTNodeType.SingleChoice, localMousePosition);
-
                     graphView.AddElement(singleChoiceNode);
-
                     return true;
                 }
-
                 case GTNodeType.MultipleChoice:
                 {
                     GTMultipleChoiceNode multipleChoiceNode = (GTMultipleChoiceNode) graphView.CreateNode("NodeName", GTNodeType.MultipleChoice, localMousePosition);
-
                     graphView.AddElement(multipleChoiceNode);
-
                     return true;
                 }
-
                 case Group _:
                 {
                     graphView.CreateGroup("NodeGroup", localMousePosition);
-
                     return true;
                 }
 

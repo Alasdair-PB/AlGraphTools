@@ -9,7 +9,7 @@ namespace GT.Elements
     using Utilities;
     using Windows;
 
-    public class GTMultipleChoiceNode : GTNode
+    public class GTMultipleChoiceNode : GTDialogueNode
     {
         public override void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
         {
@@ -17,11 +17,10 @@ namespace GT.Elements
 
             NodeType = GTNodeType.MultipleChoice;
 
-            GTChoiceSaveData choiceData = new GTChoiceSaveData()
+            GTChoiceSaveData<DialogueGTData> choiceData = new GTChoiceSaveData<DialogueGTData>()
             {
-                Text = "New Choice"
+                Data = new DialogueGTData() { Text = "new Choice" }
             };
-
             Choices.Add(choiceData);
         }
 
@@ -33,56 +32,42 @@ namespace GT.Elements
 
             Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
             {
-                GTChoiceSaveData choiceData = new GTChoiceSaveData()
+                GTChoiceSaveData<DialogueGTData> choiceData = new GTChoiceSaveData<DialogueGTData>()
                 {
-                    Text = "New Choice"
+                    Data = new DialogueGTData() { Text = "new Choice" }
                 };
 
                 Choices.Add(choiceData);
-
                 Port choicePort = CreateChoicePort(choiceData);
-
                 outputContainer.Add(choicePort);
             });
 
             addChoiceButton.AddToClassList("gt-node__button");
-
             mainContainer.Insert(1, addChoiceButton);
 
-            /* OUTPUT CONTAINER */
-
-            foreach (GTChoiceSaveData choice in Choices)
+            foreach (GTChoiceSaveData<DialogueGTData> choice in Choices)
             {
                 Port choicePort = CreateChoicePort(choice);
-
                 outputContainer.Add(choicePort);
             }
-
             RefreshExpandedState();
         }
 
         private Port CreateChoicePort(object userData)
         {
             Port choicePort = this.CreatePort();
-
             choicePort.userData = userData;
-
-            GTChoiceSaveData choiceData = (GTChoiceSaveData) userData;
+            GTChoiceSaveData<DialogueGTData> choiceData = (GTChoiceSaveData<DialogueGTData>)userData;
 
             Button deleteChoiceButton = GTElementUtility.CreateButton("X", () =>
             {
                 if (Choices.Count == 1)
-                {
                     return;
-                }
 
                 if (choicePort.connected)
-                {
                     graphView.DeleteElements(choicePort.connections);
-                }
-
+  
                 Choices.Remove(choiceData);
-
                 graphView.RemoveElement(choicePort);
             });
 
@@ -90,7 +75,7 @@ namespace GT.Elements
 
             TextField choiceTextField = GTElementUtility.CreateTextField(choiceData.Text, null, callback =>
             {
-                choiceData.Text = callback.newValue;
+                choiceData.Data.Text = callback.newValue;
             });
 
             choiceTextField.AddClasses(

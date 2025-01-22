@@ -4,9 +4,9 @@ using UnityEngine;
 namespace GT.Data.Save
 {
     [Serializable]
-    public class GTChoiceSaveData
+    public class GTChoiceSaveData<TData> where TData : GTData
     {
-        [field: SerializeField] public string Text { get; set; }
+        [field: SerializeField] public TData Data { get; set; }
         [field: SerializeField] public string NodeID { get; set; }
     }
 }

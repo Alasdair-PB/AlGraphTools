@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GT.Data.Save
 {
-    public class GTGraphSaveDataSO : ScriptableObject
+    public class GTGraph : ScriptableObject
     {
         [field: SerializeField] public string FileName { get; set; }
         [field: SerializeField] public List<GTGroupSaveData> Groups { get; set; }

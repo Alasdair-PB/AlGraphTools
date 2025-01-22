@@ -10,28 +10,27 @@ namespace GT.Utilities
     using Data;
     using Data.Save;
     using Elements;
+    using System.Reflection;
     using Windows;
 
-    public static class GTIOUtility
+    public class GTIOUtility
     {
-        private static GTGraphView graphView;
+        private GTGraphView graphView;
+        private string graphFileName;
+        private string graphFilePath;
 
-        private static string graphFileName;
-        private static string containerFolderPath;
+        private List<GTNode> nodes;
+        private List<GTGroup> groups;
 
-        private static List<GTNode> nodes;
-        private static List<GTGroup> groups;
+        private Dictionary<string, GTGroup> loadedGroups;
+        private Dictionary<string, GTNode> loadedNodes;
+        private Dictionary<string, GTNodeData> createdNodes;
 
-        private static Dictionary<string, GTGroup> loadedGroups;
-        private static Dictionary<string, GTNode> loadedNodes;
-        private static Dictionary<string, GTNodeData> createdNodes;
-
-        public static void Initialize(GTGraphView gtGraphView, string graphName)
+        public void Initialize(GTGraphView gtGraphView, string filePath, string graphName)
         {
             graphView = gtGraphView;
-
             graphFileName = graphName;
-            containerFolderPath = $"Assets/NodeSystem/Nodes/{graphName}";
+            graphFilePath = filePath;
 
             nodes = new List<GTNode>();
             groups = new List<GTGroup>();
@@ -41,13 +40,11 @@ namespace GT.Utilities
             loadedNodes = new Dictionary<string, GTNode>();
         }
 
-        public static void Save()
+        public void Save()
         {
-            CreateDefaultFolders();
             GetElementsFromGraphView();
 
-            GTGraphSaveDataSO graphData = CreateAsset<GTGraphSaveDataSO>("Assets/Editor/NodeSystem/Graphs", $"{graphFileName}Graph");
-
+            GTGraph graphData = CreateAsset<GTGraph>(graphFilePath, $"{graphFileName}");
             graphData.Initialize(graphFileName);
 
             SaveGroups(graphData);
@@ -55,7 +52,7 @@ namespace GT.Utilities
             SaveAsset(graphData);
         }
 
-        private static void SaveGroups(GTGraphSaveDataSO graphData)
+        private void SaveGroups(GTGraph graphData)
         {
             List<string> groupNames = new List<string>();
             foreach (GTGroup group in groups)
@@ -63,10 +60,9 @@ namespace GT.Utilities
                 SaveGroupToGraph(group, graphData);
                 groupNames.Add(group.title);
             }
-            UpdateOldGroups(groupNames, graphData);
         }
 
-        private static void SaveGroupToGraph(GTGroup group, GTGraphSaveDataSO graphData)
+        private void SaveGroupToGraph(GTGroup group, GTGraph graphData)
         {
             GTGroupSaveData groupData = new GTGroupSaveData()
             {
@@ -77,18 +73,7 @@ namespace GT.Utilities
             graphData.Groups.Add(groupData);
         }
 
-        private static void UpdateOldGroups(List<string> currentGroupNames, GTGraphSaveDataSO graphData)
-        {
-            if (graphData.OldGroupNames != null && graphData.OldGroupNames.Count != 0)
-            {
-                List<string> groupsToRemove = graphData.OldGroupNames.Except(currentGroupNames).ToList();
-                foreach (string groupToRemove in groupsToRemove)
-                    RemoveFolder($"{containerFolderPath}/Groups/{groupToRemove}");
-            }
-            graphData.OldGroupNames = new List<string>(currentGroupNames);
-        }
-
-        private static void SaveNodes(GTGraphSaveDataSO graphData)
+        private void SaveNodes(GTGraph graphData)
         {
             SerializableDictionary<string, List<string>> groupedNodeNames = new SerializableDictionary<string, List<string>>();
             List<string> ungroupedNodeNames = new List<string>();
@@ -104,106 +89,71 @@ namespace GT.Utilities
                 }
                 ungroupedNodeNames.Add(node.NodeName);
             }
-            UpdateOldGroupedNodes(groupedNodeNames, graphData);
-            UpdateOldUngroupedNodes(ungroupedNodeNames, graphData);
         }
-
-        private static void SaveNodeToGraph(GTNode node, GTGraphSaveDataSO graphData)
+        private void SaveNodeToGraph(GTNode node, GTGraph graphData)
         {
-            List<GTChoiceSaveData> choices = CloneNodeChoices(node.Choices);
-            GTNodeSaveData nodeData = new GTNodeSaveData()
+            Type type = node.Choices.GetType();
+            List<GTChoiceSaveData<type>> choices = CloneNodeChoices<type>(node.Choices);
+            GTNodeSaveData<TData> nodeData = new GTNodeSaveData<TData>()
             {
                 ID = node.ID,
                 Name = node.NodeName,
                 Choices = choices,
-                Text = node.Text,
+                Data = node.Data,
                 GroupID = node.Group?.ID,
                 NodeType = node.NodeType,
                 Position = node.GetPosition().position
             };
             graphData.Nodes.Add(nodeData);
         }
-        private static void SaveNodeToDataObject(GTNode node)
+        private void SaveNodeToDataObject(GTNode node)
         {
             GTNodeData myNode = new GTNodeData();
 
             myNode.Initialize(
-                node.Text,
-                ConvertNodeChoicesToNodeChoices(node.Choices),
+                node.Data,
+                ConvertNodeChoicesToNextNodeData(node.Choices),
                 node.NodeType,
                 node.IsStartingNode()
             );
 
             createdNodes.Add(node.ID, myNode);
         }
-        private static List<GTNextNodeData> ConvertNodeChoicesToNodeChoices(List<GTChoiceSaveData> nodeChoices)
+        private List<GTNextNodeData> ConvertNodeChoicesToNextNodeData(List<GTChoiceSaveData> nodeChoices)
         {
             List<GTNextNodeData> myNodeChoices = new List<GTNextNodeData>();
-
             foreach (GTChoiceSaveData nodeChoice in nodeChoices)
             {
                 GTNextNodeData choiceData = new GTNextNodeData()
                 {
-                    Text = nodeChoice.Text
+                    Data = nodeChoice.Data
                 };
                 myNodeChoices.Add(choiceData);
             }
             return myNodeChoices;
         }
 
-        private static void UpdateOldGroupedNodes(SerializableDictionary<string, List<string>> currentGroupedNodeNames, GTGraphSaveDataSO graphData)
+        public bool Load()
         {
-            if (graphData.OldGroupedNodeNames != null && graphData.OldGroupedNodeNames.Count != 0)
-            {
-                foreach (KeyValuePair<string, List<string>> oldGroupedNode in graphData.OldGroupedNodeNames)
-                {
-                    List<string> nodesToRemove = new List<string>();
-
-                    if (currentGroupedNodeNames.ContainsKey(oldGroupedNode.Key))
-                        nodesToRemove = oldGroupedNode.Value.Except(currentGroupedNodeNames[oldGroupedNode.Key]).ToList();
-
-                    foreach (string nodeToRemove in nodesToRemove)
-                        RemoveAsset($"{containerFolderPath}/Groups/{oldGroupedNode.Key}/Nodes", nodeToRemove);
-                }
-            }
-
-            graphData.OldGroupedNodeNames = new SerializableDictionary<string, List<string>>(currentGroupedNodeNames);
-        }
-
-        private static void UpdateOldUngroupedNodes(List<string> currentUngroupedNodeNames, GTGraphSaveDataSO graphData)
-        {
-            if (graphData.OldUngroupedNodeNames != null && graphData.OldUngroupedNodeNames.Count != 0)
-            {
-                List<string> nodesToRemove = graphData.OldUngroupedNodeNames.Except(currentUngroupedNodeNames).ToList();
-                foreach (string nodeToRemove in nodesToRemove)
-                    RemoveAsset($"{containerFolderPath}/Global/Nodes", nodeToRemove);
-            }
-            graphData.OldUngroupedNodeNames = new List<string>(currentUngroupedNodeNames);
-        }
-
-        public static void Load()
-        {
-            GTGraphSaveDataSO graphData = LoadAsset<GTGraphSaveDataSO>("Assets/Editor/NodeSystem/Graphs", graphFileName);
+            GTGraph graphData = LoadAsset<GTGraph>(graphFilePath, graphFileName);
             if (graphData == null)
             {
                 EditorUtility.DisplayDialog(
                     "Could not find the file!",
                     "The file at the following path could not be found:\n\n" +
-                    $"\"Assets/Editor/NodeSystem/Graphs/{graphFileName}\".\n\n" +
+                    $"\"{graphFilePath}{graphFileName}\".\n\n" +
                     "Make sure you chose the right file and it's placed at the folder path mentioned above.",
                     "Thanks!"
                 );
-                return;
+                return false;
             }
-
-            GTEditorWindow.UpdateFileName(graphData.FileName);
-
             LoadGroups(graphData.Groups);
             LoadNodes(graphData.Nodes);
             LoadNodesConnections();
+            return true;
         }
 
-        private static void LoadGroups(List<GTGroupSaveData> groups)
+        private void LoadGroups(List<GTGroupSaveData> groups)
         {
             foreach (GTGroupSaveData groupData in groups)
             {
@@ -213,7 +163,7 @@ namespace GT.Utilities
             }
         }
 
-        private static void LoadNodes(List<GTNodeSaveData> nodes)
+        private void LoadNodes(List<GTNodeSaveData> nodes)
         {
             foreach (GTNodeSaveData nodeData in nodes)
             {
@@ -222,7 +172,7 @@ namespace GT.Utilities
 
                 node.ID = nodeData.ID;
                 node.Choices = choices;
-                node.Text = nodeData.Text;
+                node.Data = nodeData.Data;
                 node.Draw();
 
                 graphView.AddElement(node);
@@ -237,7 +187,7 @@ namespace GT.Utilities
             }
         }
 
-        private static void LoadNodesConnections()
+        private void LoadNodesConnections()
         {
             foreach (KeyValuePair<string, GTNode> loadedNode in loadedNodes)
             {
@@ -258,12 +208,7 @@ namespace GT.Utilities
             }
         }
 
-        private static void CreateDefaultFolders()
-        {
-            CreateFolder("Assets/Editor/NodeSystem", "Graphs");
-        }
-
-        private static void GetElementsFromGraphView()
+        private void GetElementsFromGraphView()
         {
             Type groupType = typeof(GTGroup);
 
@@ -288,7 +233,6 @@ namespace GT.Utilities
         {
             if (AssetDatabase.IsValidFolder($"{parentFolderPath}/{newFolderName}"))
                 return;
-
             AssetDatabase.CreateFolder(parentFolderPath, newFolderName);
         }
 
@@ -329,14 +273,14 @@ namespace GT.Utilities
             AssetDatabase.DeleteAsset($"{path}/{assetName}.asset");
         }
 
-        private static List<GTChoiceSaveData> CloneNodeChoices(List<GTChoiceSaveData> nodeChoices)
+        private static List<GTChoiceSaveData<TData>> CloneNodeChoices<TData>(List<GTChoiceSaveData<TData>> nodeChoices) where TData : GTData 
         {
-            List<GTChoiceSaveData> choices = new List<GTChoiceSaveData>();
-            foreach (GTChoiceSaveData choice in nodeChoices)
+            List<GTChoiceSaveData<TData>> choices = new List<GTChoiceSaveData<TData>>();
+            foreach (GTChoiceSaveData<TData> choice in nodeChoices)
             {
-                GTChoiceSaveData choiceData = new GTChoiceSaveData()
+                GTChoiceSaveData<TData> choiceData = new GTChoiceSaveData<TData>()
                 {
-                    Text = choice.Text,
+                    Data = choice.Data,
                     NodeID = choice.NodeID
                 };
                 choices.Add(choiceData);

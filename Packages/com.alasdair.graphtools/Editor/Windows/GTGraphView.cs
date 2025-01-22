@@ -31,20 +31,14 @@ namespace GT.Windows
             {
                 return nameErrorsAmount;
             }
-
             set
             {
                 nameErrorsAmount = value;
 
                 if (nameErrorsAmount == 0)
-                {
                     editorWindow.EnableSaving();
-                }
-
                 if (nameErrorsAmount == 1)
-                {
                     editorWindow.DisableSaving();
-                }
             }
         }
 
@@ -78,20 +72,11 @@ namespace GT.Windows
             ports.ForEach(port =>
             {
                 if (startPort == port)
-                {
                     return;
-                }
-
                 if (startPort.node == port.node)
-                {
                     return;
-                }
-
                 if (startPort.direction == port.direction)
-                {
                     return;
-                }
-
                 compatiblePorts.Add(port);
             });
 
@@ -108,7 +93,6 @@ namespace GT.Windows
 
             this.AddManipulator(CreateNodeContextualMenu("Add Node (Single Choice)", GTNodeType.SingleChoice));
             this.AddManipulator(CreateNodeContextualMenu("Add Node (Multiple Choice)", GTNodeType.MultipleChoice));
-
             this.AddManipulator(CreateGroupContextualMenu());
         }
 
@@ -117,7 +101,6 @@ namespace GT.Windows
             ContextualMenuManipulator contextualMenuManipulator = new ContextualMenuManipulator(
                 menuEvent => menuEvent.menu.AppendAction(actionTitle, actionEvent => AddElement(CreateNode("NodeName", myNodeType, GetLocalMousePosition(actionEvent.eventInfo.localMousePosition))))
             );
-
             return contextualMenuManipulator;
         }
 
@@ -126,7 +109,6 @@ namespace GT.Windows
             ContextualMenuManipulator contextualMenuManipulator = new ContextualMenuManipulator(
                 menuEvent => menuEvent.menu.AppendAction("Add Group", actionEvent => CreateGroup("NodeGroup", GetLocalMousePosition(actionEvent.eventInfo.localMousePosition)))
             );
-
             return contextualMenuManipulator;
         }
 
@@ -135,39 +117,29 @@ namespace GT.Windows
             GTGroup group = new GTGroup(title, position);
 
             AddGroup(group);
-
             AddElement(group);
 
             foreach (GraphElement selectedElement in selection)
             {
                 if (!(selectedElement is GTNode))
-                {
                     continue;
-                }
 
                 GTNode node = (GTNode) selectedElement;
-
                 group.AddElement(node);
             }
-
             return group;
         }
 
         public GTNode CreateNode(string nodeName, GTNodeType myNodeType, Vector2 position, bool shouldDraw = true)
         {
             Type nodeType = Type.GetType($"GT.Elements.GT{myNodeType}Node");
-
             GTNode node = (GTNode) Activator.CreateInstance(nodeType);
-
             node.Initialize(nodeName, this, position);
 
             if (shouldDraw)
-            {
                 node.Draw();
-            }
 
             AddUngroupedNode(node);
-
             return node;
         }
 
@@ -187,26 +159,20 @@ namespace GT.Windows
                     if (selectedElement is GTNode node)
                     {
                         nodesToDelete.Add(node);
-
                         continue;
                     }
 
                     if (selectedElement.GetType() == edgeType)
                     {
                         Edge edge = (Edge) selectedElement;
-
                         edgesToDelete.Add(edge);
-
                         continue;
                     }
 
                     if (selectedElement.GetType() != groupType)
-                    {
                         continue;
-                    }
 
                     GTGroup group = (GTGroup) selectedElement;
-
                     groupsToDelete.Add(group);
                 }
 
@@ -217,19 +183,14 @@ namespace GT.Windows
                     foreach (GraphElement groupElement in groupToDelete.containedElements)
                     {
                         if (!(groupElement is GTNode))
-                        {
                             continue;
-                        }
 
                         GTNode groupNode = (GTNode) groupElement;
-
                         groupNodes.Add(groupNode);
                     }
 
                     groupToDelete.RemoveElements(groupNodes);
-
                     RemoveGroup(groupToDelete);
-
                     RemoveElement(groupToDelete);
                 }
 
@@ -238,14 +199,10 @@ namespace GT.Windows
                 foreach (GTNode nodeToDelete in nodesToDelete)
                 {
                     if (nodeToDelete.Group != null)
-                    {
                         nodeToDelete.Group.RemoveElement(nodeToDelete);
-                    }
 
                     RemoveUngroupedNode(nodeToDelete);
-
                     nodeToDelete.DisconnectAllPorts();
-
                     RemoveElement(nodeToDelete);
                 }
             };
@@ -258,9 +215,7 @@ namespace GT.Windows
                 foreach (GraphElement element in elements)
                 {
                     if (!(element is GTNode))
-                    {
                         continue;
-                    }
 
                     GTGroup gtGroup = (GTGroup) group;
                     GTNode node = (GTNode) element;
@@ -278,9 +233,7 @@ namespace GT.Windows
                 foreach (GraphElement element in elements)
                 {
                     if (!(element is GTNode))
-                    {
                         continue;
-                    }
 
                     GTGroup gtGroup = (GTGroup) group;
                     GTNode node = (GTNode) element;
@@ -302,22 +255,15 @@ namespace GT.Windows
                 if (string.IsNullOrEmpty(gtGroup.title))
                 {
                     if (!string.IsNullOrEmpty(gtGroup.OldTitle))
-                    {
                         ++NameErrorsAmount;
-                    }
                 }
                 else
                 {
                     if (string.IsNullOrEmpty(gtGroup.OldTitle))
-                    {
                         --NameErrorsAmount;
-                    }
                 }
-
                 RemoveGroup(gtGroup);
-
                 gtGroup.OldTitle = gtGroup.title;
-
                 AddGroup(gtGroup);
             };
         }
@@ -331,9 +277,7 @@ namespace GT.Windows
                     foreach (Edge edge in changes.edgesToCreate)
                     {
                         GTNode nextNode = (GTNode) edge.input.node;
-
                         GTChoiceSaveData choiceData = (GTChoiceSaveData) edge.output.userData;
-
                         choiceData.NodeID = nextNode.ID;
                     }
                 }
@@ -345,14 +289,10 @@ namespace GT.Windows
                     foreach (GraphElement element in changes.elementsToRemove)
                     {
                         if (element.GetType() != edgeType)
-                        {
                             continue;
-                        }
 
                         Edge edge = (Edge) element;
-
                         GTChoiceSaveData choiceData = (GTChoiceSaveData) edge.output.userData;
-
                         choiceData.NodeID = "";
                     }
                 }
@@ -368,26 +308,19 @@ namespace GT.Windows
             if (!ungroupedNodes.ContainsKey(nodeName))
             {
                 GTNodeErrorData nodeErrorData = new GTNodeErrorData();
-
                 nodeErrorData.Nodes.Add(node);
-
                 ungroupedNodes.Add(nodeName, nodeErrorData);
-
                 return;
             }
 
             List<GTNode> ungroupedNodesList = ungroupedNodes[nodeName].Nodes;
-
             ungroupedNodesList.Add(node);
-
             Color errorColor = ungroupedNodes[nodeName].ErrorData.Color;
-
             node.SetErrorStyle(errorColor);
 
             if (ungroupedNodesList.Count == 2)
             {
                 ++NameErrorsAmount;
-
                 ungroupedNodesList[0].SetErrorStyle(errorColor);
             }
         }
@@ -395,26 +328,19 @@ namespace GT.Windows
         public void RemoveUngroupedNode(GTNode node)
         {
             string nodeName = node.NodeName.ToLower();
-
             List<GTNode> ungroupedNodesList = ungroupedNodes[nodeName].Nodes;
-
             ungroupedNodesList.Remove(node);
-
             node.ResetStyle();
 
             if (ungroupedNodesList.Count == 1)
             {
                 --NameErrorsAmount;
-
                 ungroupedNodesList[0].ResetStyle();
-
                 return;
             }
 
             if (ungroupedNodesList.Count == 0)
-            {
                 ungroupedNodes.Remove(nodeName);
-            }
         }
 
         private void AddGroup(GTGroup group)
@@ -424,26 +350,19 @@ namespace GT.Windows
             if (!groups.ContainsKey(groupName))
             {
                 GTGroupErrorData groupErrorData = new GTGroupErrorData();
-
                 groupErrorData.Groups.Add(group);
-
                 groups.Add(groupName, groupErrorData);
-
                 return;
             }
 
             List<GTGroup> groupsList = groups[groupName].Groups;
-
             groupsList.Add(group);
-
             Color errorColor = groups[groupName].ErrorData.Color;
-
             group.SetErrorStyle(errorColor);
 
             if (groupsList.Count == 2)
             {
                 ++NameErrorsAmount;
-
                 groupsList[0].SetErrorStyle(errorColor);
             }
         }
@@ -451,62 +370,46 @@ namespace GT.Windows
         private void RemoveGroup(GTGroup group)
         {
             string oldGroupName = group.OldTitle.ToLower();
-
             List<GTGroup> groupsList = groups[oldGroupName].Groups;
 
             groupsList.Remove(group);
-
             group.ResetStyle();
 
             if (groupsList.Count == 1)
             {
                 --NameErrorsAmount;
-
                 groupsList[0].ResetStyle();
-
                 return;
             }
 
             if (groupsList.Count == 0)
-            {
                 groups.Remove(oldGroupName);
-            }
         }
 
         public void AddGroupedNode(GTNode node, GTGroup group)
         {
             string nodeName = node.NodeName.ToLower();
-
             node.Group = group;
 
             if (!groupedNodes.ContainsKey(group))
-            {
                 groupedNodes.Add(group, new SerializableDictionary<string, GTNodeErrorData>());
-            }
 
             if (!groupedNodes[group].ContainsKey(nodeName))
             {
                 GTNodeErrorData nodeErrorData = new GTNodeErrorData();
-
                 nodeErrorData.Nodes.Add(node);
-
                 groupedNodes[group].Add(nodeName, nodeErrorData);
-
                 return;
             }
 
             List<GTNode> groupedNodesList = groupedNodes[group][nodeName].Nodes;
-
             groupedNodesList.Add(node);
-
             Color errorColor = groupedNodes[group][nodeName].ErrorData.Color;
-
             node.SetErrorStyle(errorColor);
 
             if (groupedNodesList.Count == 2)
             {
                 ++NameErrorsAmount;
-
                 groupedNodesList[0].SetErrorStyle(errorColor);
             }
         }
@@ -514,53 +417,40 @@ namespace GT.Windows
         public void RemoveGroupedNode(GTNode node, GTGroup group)
         {
             string nodeName = node.NodeName.ToLower();
-
             node.Group = null;
-
             List<GTNode> groupedNodesList = groupedNodes[group][nodeName].Nodes;
 
             groupedNodesList.Remove(node);
-
             node.ResetStyle();
 
             if (groupedNodesList.Count == 1)
             {
                 --NameErrorsAmount;
-
                 groupedNodesList[0].ResetStyle();
-
                 return;
             }
 
             if (groupedNodesList.Count == 0)
             {
                 groupedNodes[group].Remove(nodeName);
-
                 if (groupedNodes[group].Count == 0)
-                {
                     groupedNodes.Remove(group);
-                }
             }
         }
 
         private void AddGridBackground()
         {
             GridBackground gridBackground = new GridBackground();
-
             gridBackground.StretchToParentSize();
-
             Insert(0, gridBackground);
         }
 
         private void AddSearchWindow()
         {
             if (searchWindow == null)
-            {
                 searchWindow = ScriptableObject.CreateInstance<GTSearchWindow>();
-            }
 
             searchWindow.Initialize(this);
-
             nodeCreationRequest = context => SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
         }
 
@@ -572,9 +462,7 @@ namespace GT.Windows
             };
 
             miniMap.SetPosition(new Rect(15, 50, 200, 180));
-
             Add(miniMap);
-
             miniMap.visible = false;
         }
 
@@ -603,23 +491,18 @@ namespace GT.Windows
             Vector2 worldMousePosition = mousePosition;
 
             if (isSearchWindow)
-            {
                 worldMousePosition = editorWindow.rootVisualElement.ChangeCoordinatesTo(editorWindow.rootVisualElement.parent, mousePosition - editorWindow.position.position);
-            }
 
             Vector2 localMousePosition = contentViewContainer.WorldToLocal(worldMousePosition);
-
             return localMousePosition;
         }
 
         public void ClearGraph()
         {
             graphElements.ForEach(graphElement => RemoveElement(graphElement));
-
             groups.Clear();
             groupedNodes.Clear();
             ungroupedNodes.Clear();
-
             NameErrorsAmount = 0;
         }
 
