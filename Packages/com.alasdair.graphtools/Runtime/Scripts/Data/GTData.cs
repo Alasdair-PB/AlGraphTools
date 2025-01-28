@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GT.Data
 {
     [Serializable]
-    public class GTData
+    abstract public class GTData
     {
 
     }

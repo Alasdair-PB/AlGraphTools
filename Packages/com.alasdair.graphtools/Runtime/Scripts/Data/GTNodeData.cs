@@ -9,11 +9,11 @@ namespace GT.Data
     public class GTNodeData
     {
         [field: SerializeField] public GTData Data { get; set; }
-        [field: SerializeField] public List<GTNextNodeData> NextNodes { get; set; }
+        [field: SerializeField] public List<GTNextNodeData<GTData>> NextNodes { get; set; }
         [field: SerializeField] public GTNodeType NodeType { get; set; }
         [field: SerializeField] public bool IsStartingNode { get; set; }
 
-        public void Initialize(GTData data, List<GTNextNodeData> nextNodes, GTNodeType nodeType, bool isStartingNode)
+        public void Initialize(GTData data, List<GTNextNodeData<GTData>> nextNodes, GTNodeType nodeType, bool isStartingNode)
         {
             Data = data;
             NextNodes = nextNodes;

@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace GT
 {
-    public class GTNode : MonoBehaviour
+    public class MyGTNode : MonoBehaviour
     {
         //[SerializeField] private GTNodeSO myNode;
 

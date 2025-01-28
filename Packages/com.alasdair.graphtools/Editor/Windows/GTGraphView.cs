@@ -24,17 +24,11 @@ namespace GT.Windows
         private SerializableDictionary<Group, SerializableDictionary<string, GTNodeErrorData>> groupedNodes;
 
         private int nameErrorsAmount;
-
         public int NameErrorsAmount
         {
-            get
-            {
-                return nameErrorsAmount;
-            }
-            set
-            {
+            get { return nameErrorsAmount;}
+            set {
                 nameErrorsAmount = value;
-
                 if (nameErrorsAmount == 0)
                     editorWindow.EnableSaving();
                 if (nameErrorsAmount == 1)
@@ -68,7 +62,6 @@ namespace GT.Windows
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
         {
             List<Port> compatiblePorts = new List<Port>();
-
             ports.ForEach(port =>
             {
                 if (startPort == port)
@@ -91,6 +84,7 @@ namespace GT.Windows
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
 
+            // Top modify: Creates node of node type in GT.elements namespace
             this.AddManipulator(CreateNodeContextualMenu("Add Node (Single Choice)", GTNodeType.SingleChoice));
             this.AddManipulator(CreateNodeContextualMenu("Add Node (Multiple Choice)", GTNodeType.MultipleChoice));
             this.AddManipulator(CreateGroupContextualMenu());

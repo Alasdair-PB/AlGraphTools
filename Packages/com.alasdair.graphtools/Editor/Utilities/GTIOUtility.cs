@@ -78,10 +78,11 @@ namespace GT.Utilities
             SerializableDictionary<string, List<string>> groupedNodeNames = new SerializableDictionary<string, List<string>>();
             List<string> ungroupedNodeNames = new List<string>();
 
-            foreach (GTNode node in nodes)
+            foreach (var node in nodes)
             {
                 SaveNodeToGraph(node, graphData);
                 SaveNodeToDataObject(node);
+
                 if (node.Group != null)
                 {
                     groupedNodeNames.AddItem(node.Group.title, node.NodeName);
@@ -90,10 +91,9 @@ namespace GT.Utilities
                 ungroupedNodeNames.Add(node.NodeName);
             }
         }
-        private void SaveNodeToGraph(GTNode node, GTGraph graphData)
+        private void SaveNodeToGraph<TData>(GTNode<TData> node, GTGraph graphData)  where TData : GTData
         {
-            Type type = node.Choices.GetType();
-            List<GTChoiceSaveData<type>> choices = CloneNodeChoices<type>(node.Choices);
+            List<GTChoiceSaveData<TData>> choices = CloneNodeChoices<TData>(node.Choices);
             GTNodeSaveData<TData> nodeData = new GTNodeSaveData<TData>()
             {
                 ID = node.ID,
@@ -122,7 +122,7 @@ namespace GT.Utilities
         private List<GTNextNodeData> ConvertNodeChoicesToNextNodeData(List<GTChoiceSaveData> nodeChoices)
         {
             List<GTNextNodeData> myNodeChoices = new List<GTNextNodeData>();
-            foreach (GTChoiceSaveData nodeChoice in nodeChoices)
+            foreach (GTChoiceSaveData<T> nodeChoice in nodeChoices) 
             {
                 GTNextNodeData choiceData = new GTNextNodeData()
                 {

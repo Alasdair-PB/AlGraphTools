@@ -16,5 +16,10 @@ namespace GT.Data.Save
         [field: SerializeField] public string GroupID { get; set; }
         [field: SerializeField] public GTNodeType NodeType { get; set; }
         [field: SerializeField] public Vector2 Position { get; set; }
+        public Type DataType { get; }
+        public GTNodeSaveData()
+        {
+            DataType = typeof(TData);
+        }
     }
 }

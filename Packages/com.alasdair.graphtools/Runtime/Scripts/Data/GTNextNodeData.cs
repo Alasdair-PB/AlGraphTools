@@ -4,9 +4,9 @@ using UnityEngine;
 namespace GT.Data
 {
     [Serializable]
-    public class GTNextNodeData
+    public class GTNextNodeData<TData> where TData : GTData
     {
-        [field: SerializeField] public GTData Data { get; set; }
+        [field: SerializeField] public TData Data { get; set; }
         [field: SerializeField] public GTNodeData NextNode { get; set; }
     }
 }

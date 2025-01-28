@@ -13,12 +13,12 @@ namespace GT.Elements
     using Utilities;
     using Windows;
 
-    public class GTNode : Node
+    public class GTNode<TData> : Node where TData : GTData
     {
         public string ID { get; set; }
         public string NodeName { get; set; }  
-        public GTData Data { get; set; }
-        public List<GTChoiceSaveData<GTData>> Choices { get; set; }
+        public TData Data { get; set; }
+        public List<GTChoiceSaveData<TData>> Choices { get; set; }
         public GTNodeType NodeType { get; set; }
         public GTGroup Group { get; set; }
 
