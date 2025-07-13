@@ -16,7 +16,7 @@ namespace GT.Elements
 
             NodeType = GTNodeType.SingleChoice;
 
-            GTChoiceSaveData<DialogueGTData> choiceData = new GTChoiceSaveData<DialogueGTData>()
+            GTChoiceSaveData choiceData = new GTChoiceSaveData()
             {
                 Data = new DialogueGTData() { Text = "Next Node" }
             };
@@ -29,7 +29,7 @@ namespace GT.Elements
         {
             base.Draw();
 
-            foreach (GTChoiceSaveData<DialogueGTData> choice in Choices)
+            foreach (GTChoiceSaveData choice in Choices)
             {
                 Port choicePort = this.CreatePort(choice.Data.Text);
                 choicePort.userData = choice;

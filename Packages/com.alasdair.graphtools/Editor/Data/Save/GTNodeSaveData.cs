@@ -7,19 +7,13 @@ namespace GT.Data.Save
     using Enumerations;
 
     [Serializable]
-    public class GTNodeSaveData<TData> where TData : GTData
+    public class GTNodeSaveData
     {
         [field: SerializeField] public string ID { get; set; }
         [field: SerializeField] public string Name { get; set; }
-        [field: SerializeField] public TData Data { get; set; }
-        [field: SerializeField] public List<TData> Choices { get; set; }
         [field: SerializeField] public string GroupID { get; set; }
         [field: SerializeField] public GTNodeType NodeType { get; set; }
         [field: SerializeField] public Vector2 Position { get; set; }
-        public Type DataType { get; }
-        public GTNodeSaveData()
-        {
-            DataType = typeof(TData);
-        }
+
     }
 }

@@ -3,7 +3,7 @@ using GT.Data;
 using System;
 
 [Serializable]
-public class DialogueGTData : GTData
+public class DialogueGTData : INodeData
 {
     [field: SerializeField] public string Text { get; set; }
 }

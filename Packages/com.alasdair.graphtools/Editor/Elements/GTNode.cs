@@ -13,17 +13,50 @@ namespace GT.Elements
     using Utilities;
     using Windows;
 
-    public class GTNode<TData> : Node where TData : GTData
+    public abstract class GTNode : Node
     {
         public string ID { get; set; }
         public string NodeName { get; set; }  
-        public TData Data { get; set; }
-        public List<GTChoiceSaveData<TData>> Choices { get; set; }
         public GTNodeType NodeType { get; set; }
         public GTGroup Group { get; set; }
-
         protected GTGraphView graphView;
         private Color defaultBackgroundColor;
+
+        public abstract GTNodeType GTInitializeNodeType();
+        public abstract void GTNodeInitialize(string nodeName, GTGraphView gtGraphView, Vector2 position);
+        public abstract void GTNodeDraw();
+        public abstract GTNodeSaveData GTSaveNodeToGraph();
+        public abstract GTNodeData GTSaveNodeToDataObject();
+        public abstract void GTLoadNodeData(GTNodeSaveData loadData);
+        public void LoadData(GTNodeSaveData loadData)
+        {
+            ID = loadData.ID;
+            GTLoadNodeData(loadData);
+        }
+
+        public GTNodeSaveData SaveNodeToGraph()
+        {
+            GTNodeSaveData nodeData = GTSaveNodeToGraph();
+            {
+                nodeData.ID = this.ID;
+                nodeData.Name = this.NodeName;
+                nodeData.GroupID = this.Group?.ID;
+                nodeData.NodeType = this.NodeType;
+                nodeData.Position = this.GetPosition().position;
+            };
+            return nodeData;
+        }
+        public GTNodeData SaveNodeToDataObject()
+        {
+            GTNodeData myNode = GTSaveNodeToDataObject();
+
+            myNode.Initialize(
+                NodeType,
+                IsStartingNode()
+            );
+
+            return myNode;
+        }
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
@@ -43,15 +76,16 @@ namespace GT.Elements
 
             mainContainer.AddToClassList("gt-node__main-container");
             extensionContainer.AddToClassList("gt-node__extension-container");
+            NodeType = GTInitializeNodeType();
         }
 
-        public virtual void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
+        public void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
         {          
-            Choices = new List<GTChoiceSaveData<GTData>>();
             InitializeGenerics(nodeName, gtGraphView, position);
+            GTNodeInitialize(nodeName, gtGraphView, position);
         }
 
-        public virtual void Draw()
+        public void Draw()
         {
             TextField myNodeNameTextField = GTElementUtility.CreateTextField(NodeName, null, callback =>
             {
@@ -93,6 +127,8 @@ namespace GT.Elements
             titleContainer.Insert(0, myNodeNameTextField);
             Port inputPort = this.CreatePort("Node Connection", Orientation.Horizontal, Direction.Input, Port.Capacity.Multi);
             inputContainer.Add(inputPort);
+
+            GTNodeDraw();
         }
 
         public void DisconnectAllPorts()

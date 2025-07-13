@@ -16,13 +16,6 @@ namespace GT.Elements
     public class GTDialogueNode : GTNode
     {
         public new DialogueGTData Data { get; set; }
-        public new List<GTChoiceSaveData<DialogueGTData>> Choices { get; set; }
-
-        public override void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
-        {            
-            Choices = new List<GTChoiceSaveData<DialogueGTData>>();
-            InitializeGenerics(nodeName, gtGraphView, position);
-        }
 
         public override void Draw()
         {
