@@ -16,11 +16,11 @@ namespace GT.Elements
     public class GTDialogueNode : GTNode
     {
         public new DialogueGTData Data { get; set; }
-        public new List<GTChoiceSaveData<DialogueGTData>> Choices { get; set; }
+        public new List<GTChoiceSaveData> Choices { get; set; }
 
         public override void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
         {            
-            Choices = new List<GTChoiceSaveData<DialogueGTData>>();
+            Choices = new List<GTChoiceSaveData>();
             InitializeGenerics(nodeName, gtGraphView, position);
         }
 
@@ -31,7 +31,7 @@ namespace GT.Elements
             VisualElement customDataContainer = new VisualElement();
             customDataContainer.AddToClassList("gt-node__custom-data-container");
             Foldout textFoldout = GTElementUtility.CreateFoldout("Node Text");
-            TextField textTextField = GTElementUtility.CreateTextArea(Text, null, callback => Text = callback.newValue);
+            TextField textTextField = GTElementUtility.CreateTextArea(Data.Text, null, callback => Data.Text = callback.newValue);
 
             textTextField.AddClasses(
                 "gt-node__text-field",

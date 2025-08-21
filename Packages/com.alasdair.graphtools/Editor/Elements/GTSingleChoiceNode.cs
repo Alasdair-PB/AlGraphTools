@@ -8,7 +8,7 @@ namespace GT.Elements
     using Utilities;
     using Windows;
 
-    public class GTSingleChoiceNode : GTDialogueNode
+    public class GTSingleChoiceNode : GTNode
     {
         public override void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
         {
@@ -16,9 +16,9 @@ namespace GT.Elements
 
             NodeType = GTNodeType.SingleChoice;
 
-            GTChoiceSaveData<DialogueGTData> choiceData = new GTChoiceSaveData<DialogueGTData>()
+            GTChoiceSaveData choiceData = new GTChoiceSaveData()
             {
-                Data = new DialogueGTData() { Text = "Next Node" }
+                Data = "Next Node" 
             };
 
 
@@ -29,9 +29,9 @@ namespace GT.Elements
         {
             base.Draw();
 
-            foreach (GTChoiceSaveData<DialogueGTData> choice in Choices)
+            foreach (GTChoiceSaveData choice in Choices)
             {
-                Port choicePort = this.CreatePort(choice.Data.Text);
+                Port choicePort = this.CreatePort(choice.Data);
                 choicePort.userData = choice;
                 outputContainer.Add(choicePort);
             }

@@ -93,8 +93,8 @@ namespace GT.Utilities
         private void SaveNodeToGraph(GTNode node, GTGraph graphData)
         {
             Type type = node.Choices.GetType();
-            List<GTChoiceSaveData<type>> choices = CloneNodeChoices<type>(node.Choices);
-            GTNodeSaveData<TData> nodeData = new GTNodeSaveData<TData>()
+            List<GTChoiceSaveData> choices = CloneNodeChoices(node.Choices);
+            GTNodeSaveData nodeData = new GTNodeSaveData()          
             {
                 ID = node.ID,
                 Name = node.NodeName,
@@ -126,7 +126,7 @@ namespace GT.Utilities
             {
                 GTNextNodeData choiceData = new GTNextNodeData()
                 {
-                    Data = nodeChoice.Data
+                    Data = nodeChoice.Data, 
                 };
                 myNodeChoices.Add(choiceData);
             }
@@ -273,12 +273,12 @@ namespace GT.Utilities
             AssetDatabase.DeleteAsset($"{path}/{assetName}.asset");
         }
 
-        private static List<GTChoiceSaveData<TData>> CloneNodeChoices<TData>(List<GTChoiceSaveData<TData>> nodeChoices) where TData : GTData 
+        private static List<GTChoiceSaveData> CloneNodeChoices(List<GTChoiceSaveData> nodeChoices) 
         {
-            List<GTChoiceSaveData<TData>> choices = new List<GTChoiceSaveData<TData>>();
-            foreach (GTChoiceSaveData<TData> choice in nodeChoices)
+            List<GTChoiceSaveData> choices = new List<GTChoiceSaveData>();
+            foreach (GTChoiceSaveData choice in nodeChoices)
             {
-                GTChoiceSaveData<TData> choiceData = new GTChoiceSaveData<TData>()
+                GTChoiceSaveData choiceData = new GTChoiceSaveData()
                 {
                     Data = choice.Data,
                     NodeID = choice.NodeID

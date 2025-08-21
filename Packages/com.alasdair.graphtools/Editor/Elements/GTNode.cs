@@ -17,8 +17,8 @@ namespace GT.Elements
     {
         public string ID { get; set; }
         public string NodeName { get; set; }  
-        public GTData Data { get; set; }
-        public List<GTChoiceSaveData<GTData>> Choices { get; set; }
+        public string Data { get; set; }
+        public List<GTChoiceSaveData> Choices { get; set; }
         public GTNodeType NodeType { get; set; }
         public GTGroup Group { get; set; }
 
@@ -47,7 +47,7 @@ namespace GT.Elements
 
         public virtual void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
         {          
-            Choices = new List<GTChoiceSaveData<GTData>>();
+            Choices = new List<GTChoiceSaveData>();
             InitializeGenerics(nodeName, gtGraphView, position);
         }
 
