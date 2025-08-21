@@ -6,7 +6,7 @@ using UnityEngine;
 namespace GT.Data
 {
     [Serializable]
-    public class GTNodeData
+    public class GTNodeData 
     {
         [field: SerializeField] public GTNodeType NodeType { get; set; }
         [field: SerializeField] public bool IsStartingNode { get; set; }

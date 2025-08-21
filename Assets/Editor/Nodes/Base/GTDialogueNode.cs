@@ -17,10 +17,8 @@ namespace GT.Elements
     {
         public new DialogueGTData Data { get; set; }
 
-        public override void Draw()
+        public override void GTNodeDraw()
         {
-            base.Draw();
-
             VisualElement customDataContainer = new VisualElement();
             customDataContainer.AddToClassList("gt-node__custom-data-container");
             Foldout textFoldout = GTElementUtility.CreateFoldout("Node Text");

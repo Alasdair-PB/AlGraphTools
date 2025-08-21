@@ -31,7 +31,7 @@ namespace GT.Elements
         public abstract void GTOutNodeDraw();
         public abstract GTOutNodeSaveData GTSaveOutNodeToGraph();
         public abstract GTNextNodeData SaveToNodeData(GTOutNodeSaveData data);
-        public abstract GTOutNodeSaveData CloneSaveData(GTOutNodeSaveData data);
+        public abstract GTNextNodeData CloneSaveData(GTOutNodeSaveData data);
         private List<GTNextNodeData> ConvertNodeChoicesToNextNodeData(List<GTOutNodeSaveData> nodeChoices)
         {
             List<GTNextNodeData> myNodeChoices = new List<GTNextNodeData>();
@@ -43,12 +43,12 @@ namespace GT.Elements
             return myNodeChoices;
         }
 
-        private List<GTOutNodeSaveData> CloneNodeChoices(List<GTOutNodeSaveData> outNodeData)
+        private List<GTNextNodeData> CloneNodeChoices(List<GTOutNodeSaveData> outNodeData)
         {
-            List<GTOutNodeSaveData> outNodes = new List<GTOutNodeSaveData>();
+            List<GTNextNodeData> outNodes = new List<GTNextNodeData>();
             foreach (GTOutNodeSaveData saveData in outNodeData)
             {
-                GTOutNodeSaveData choiceData = CloneSaveData(saveData);
+                GTNextNodeData choiceData = CloneSaveData(saveData);
                 outNodes.Add(choiceData);
             }
             return outNodes;
@@ -56,26 +56,25 @@ namespace GT.Elements
 
         public override GTNodeSaveData GTSaveNodeToGraph() {
             GTOutNodeSaveData outData = GTSaveOutNodeToGraph();
-
             outData.outChannels = ConvertNodeChoicesToNextNodeData(OutChannels);
             return outData; 
         }
 
         public override GTNodeData GTSaveNodeToDataObject() {
             GTOutNodeData outNodeData = new GTOutNodeData();
-            outNodeData.Initialize( , nodeType, isStartingNode);
+            List<GTNextNodeData> nextNodeDatas = new List<GTNextNodeData>();
+            outNodeData.Initialize(nextNodeDatas, NodeType, IsStartingNode());
             return outNodeData;
         }
 
         public override void GTLoadNodeData(GTNodeSaveData loadData) {
             var outNodeData = loadData as GTOutNodeSaveData;
             outNodeData.outChannels = CloneNodeChoices(OutChannels);
-
         }
 
         public override void GTNodeDraw()
         {
-            Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
+            Button addChoiceButton = GTElementUtility.CreateButton("Add Out Channel", () =>
             {
                 GTOutNodeSaveData choiceData = new GTOutNodeSaveData()
                 {
@@ -95,8 +94,8 @@ namespace GT.Elements
                 Port outPort = CreateChoicePort(outChannel);
                 outputContainer.Add(outPort);
             }
-            RefreshExpandedState();
 
+            RefreshExpandedState();
             GTOutNodeDraw();
         }
 

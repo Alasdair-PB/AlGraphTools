@@ -159,12 +159,12 @@ namespace GT.Utilities
             {
                 foreach (Port choicePort in loadedNode.Value.outputContainer.Children())
                 {
-                    GTChoiceSaveData choiceData = (GTChoiceSaveData) choicePort.userData;
+                    GTNodeSaveData choiceData = (GTNodeSaveData) choicePort.userData;
 
-                    if (string.IsNullOrEmpty(choiceData.NodeID))
+                    if (string.IsNullOrEmpty(choiceData.ID))
                         continue;
 
-                    GTNode nextNode = loadedNodes[choiceData.NodeID];
+                    GTNode nextNode = loadedNodes[choiceData.ID];
                     Port nextNodeInputPort = (Port) nextNode.inputContainer.Children().First();
                     Edge edge = choicePort.ConnectTo(nextNodeInputPort);
 
