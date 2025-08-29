@@ -5,36 +5,36 @@ namespace GT.Elements
 {
     using Data.Save;
     using Enumerations;
+    using GT.Data;
     using Utilities;
     using Windows;
 
     public class GTSingleChoiceNode : GTNode
     {
-        public override void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
+        public override void OnAwake()
         {
-            base.Initialize(nodeName, gtGraphView, position);
+            nodeData.nodeType = GTNodeType.SingleChoice;
 
-            NodeType = GTNodeType.SingleChoice;
-
-            GTChoiceSaveData choiceData = new GTChoiceSaveData()
+            GTNextNodeData choiceData = new GTNextNodeData()
             {
-                Data = "Next Node" 
+                data = "Next Node",
+                id = ""
             };
-
-
-            Choices.Add(choiceData);
+            nodeData.connectedPorts.Add(choiceData);
         }
 
         public override void Draw()
         {
             base.Draw();
 
-            foreach (GTChoiceSaveData choice in Choices)
+            foreach (GTNextNodeData outChannel in nodeData.connectedPorts)
             {
-                Port choicePort = this.CreatePort(choice.Data);
-                choicePort.userData = choice;
-                outputContainer.Add(choicePort);
+                // Data is not needed- this is the named output
+                Port outPort = this.CreatePort(outChannel.data);
+                outPort.userData = outChannel;
+                outputContainer.Add(outPort);
             }
+            Debug.Log(nodeData.connectedPorts.Count);
             RefreshExpandedState();
         }
     }

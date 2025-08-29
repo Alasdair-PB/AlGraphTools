@@ -6,18 +6,18 @@ namespace GT.Elements
 {
     public class GTGroup : Group
     {
-        public string ID { get; set; }
-        public string OldTitle { get; set; }
+        public string id { get; set; }
+        public string oldTitle { get; set; }
 
         private Color defaultBorderColor;
         private float defaultBorderWidth;
 
         public GTGroup(string groupTitle, Vector2 position)
         {
-            ID = Guid.NewGuid().ToString();
+            id = Guid.NewGuid().ToString();
 
             title = groupTitle;
-            OldTitle = groupTitle;
+            oldTitle = groupTitle;
 
             SetPosition(new Rect(position, Vector2.zero));
 

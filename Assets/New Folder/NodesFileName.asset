@@ -15,27 +15,30 @@ MonoBehaviour:
   <FileName>k__BackingField: NodesFileName
   <Groups>k__BackingField: []
   <Nodes>k__BackingField:
-  - <id>k__BackingField: cb35d944-2aa2-4379-a990-96051f3660d1
+  - <id>k__BackingField: 0e2e8a78-0c25-4f49-99f7-e9a852751736
     <name>k__BackingField: NodeName
     <data>k__BackingField: 
-    <connectedPorts>k__BackingField:
-    - <data>k__BackingField: text
-      <id>k__BackingField: 
+    <outChannels>k__BackingField:
+    - <data>k__BackingField: new Choice
+      <nodeID>k__BackingField: 0998edb9-4b6d-488c-9655-2d16ae223a83
+    - <data>k__BackingField: new Choice
+      <nodeID>k__BackingField: 0998edb9-4b6d-488c-9655-2d16ae223a83
+    - <data>k__BackingField: new Choice
+      <nodeID>k__BackingField: 0998edb9-4b6d-488c-9655-2d16ae223a83
+    <groupID>k__BackingField: 
     <nodeType>k__BackingField: 1
-    <isStartingNode>k__BackingField: 0
-    <groupID>k__BackingField: 
-    <position>k__BackingField: {x: 600.5, y: 289}
-  - <id>k__BackingField: f60e4c56-71c5-4b16-8d20-db778dabfddd
-    <name>k__BackingField: hello
+    <position>k__BackingField: {x: 332, y: 209.5}
+  - <id>k__BackingField: 0998edb9-4b6d-488c-9655-2d16ae223a83
+    <name>k__BackingField: single
     <data>k__BackingField: 
-    <connectedPorts>k__BackingField:
+    <outChannels>k__BackingField:
     - <data>k__BackingField: Next Node
-      <id>k__BackingField: cb35d944-2aa2-4379-a990-96051f3660d1
-    <nodeType>k__BackingField: 0
-    <isStartingNode>k__BackingField: 0
+      <nodeID>k__BackingField: 
     <groupID>k__BackingField: 
-    <position>k__BackingField: {x: 322, y: 281.5}
-  <OldGroupNames>k__BackingField: []
+    <nodeType>k__BackingField: 0
+    <position>k__BackingField: {x: 703, y: 282.5}
+  <OldGroupNames>k__BackingField:
+  - 
   <OldUngroupedNodeNames>k__BackingField: []
   <OldGroupedNodeNames>k__BackingField:
     list: []

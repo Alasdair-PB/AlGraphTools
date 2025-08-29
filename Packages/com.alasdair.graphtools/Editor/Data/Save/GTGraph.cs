@@ -7,7 +7,7 @@ namespace GT.Data.Save
     {
         [field: SerializeField] public string FileName { get; set; }
         [field: SerializeField] public List<GTGroupSaveData> Groups { get; set; }
-        [field: SerializeField] public List<GTNodeSaveData> Nodes { get; set; }
+        [field: SerializeField] public List<GTNodeData> Nodes { get; set; }
         [field: SerializeField] public List<string> OldGroupNames { get; set; }
         [field: SerializeField] public List<string> OldUngroupedNodeNames { get; set; }
         [field: SerializeField] public SerializableDictionary<string, List<string>> OldGroupedNodeNames { get; set; }
@@ -17,7 +17,7 @@ namespace GT.Data.Save
             FileName = fileName;
 
             Groups = new List<GTGroupSaveData>();
-            Nodes = new List<GTNodeSaveData>();
+            Nodes = new List<GTNodeData>();
         }
     }
 }

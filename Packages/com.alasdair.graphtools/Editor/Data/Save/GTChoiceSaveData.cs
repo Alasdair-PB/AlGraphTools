@@ -3,10 +3,16 @@ using UnityEngine;
 
 namespace GT.Data.Save
 {
-    [Serializable]
-    public class GTChoiceSaveData
+   /* [Serializable]
+    public class GTOutChannelSaveData
     {
-        [field: SerializeField] public string Data { get; set; }
-        [field: SerializeField] public string NodeID { get; set; }
+        [field: SerializeField] public string data { get; set; }
+        [field: SerializeField] public string nodeID { get; set; }
     }
+
+    [Serializable]
+    public class newData : GTOutChannelSaveData 
+    {
+        [field: SerializeField] public string secondData { get; set; }
+    }*/
 }

@@ -15,13 +15,12 @@ namespace GT.Elements
 
     public class GTDialogueNode : GTNode
     {
-        public new DialogueGTData Data { get; set; }
-        public new List<GTChoiceSaveData> Choices { get; set; }
+        public DialogueGTData Data { get; set; }
+        public List<GTNextNodeData> Choices { get; set; }
 
-        public override void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
+        public override void OnAwake()
         {            
-            Choices = new List<GTChoiceSaveData>();
-            InitializeGenerics(nodeName, gtGraphView, position);
+            Choices = new List<GTNextNodeData>();
         }
 
         public override void Draw()

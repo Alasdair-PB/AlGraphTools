@@ -7,6 +7,7 @@ using UnityEngine.UIElements;
 
 namespace GT.Elements
 {
+    using Codice.CM.Common.Tree;
     using Data.Save;
     using Enumerations;
     using GT.Data;
@@ -15,15 +16,15 @@ namespace GT.Elements
 
     public class GTNode : Node
     {
-        public string ID { get; set; }
-        public string NodeName { get; set; }  
-        public string Data { get; set; }
-        public List<GTChoiceSaveData> Choices { get; set; }
-        public GTNodeType NodeType { get; set; }
-        public GTGroup Group { get; set; }
-
+        public GTNodeData nodeData {get;set;}
+        public GTGroup group { get; set; }
         protected GTGraphView graphView;
         private Color defaultBackgroundColor;
+
+        public string GetNodeId()
+        {
+            return nodeData.id;
+        }
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
@@ -32,11 +33,11 @@ namespace GT.Elements
             base.BuildContextualMenu(evt);
         }
 
-        public void InitializeGenerics(string nodeName, GTGraphView gtGraphView, Vector2 position)
+        public void InitializeGenerics(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {
-            ID = Guid.NewGuid().ToString();
-
-            NodeName = nodeName;
+            nodeData = new GTNodeData();
+            nodeData.id = Guid.NewGuid().ToString();
+            nodeData.name = in_NodeName;
             SetPosition(new Rect(position, Vector2.zero));
             graphView = gtGraphView;
             defaultBackgroundColor = new Color(29f / 255f, 29f / 255f, 30f / 255f);
@@ -45,15 +46,19 @@ namespace GT.Elements
             extensionContainer.AddToClassList("gt-node__extension-container");
         }
 
-        public virtual void Initialize(string nodeName, GTGraphView gtGraphView, Vector2 position)
+        public virtual void OnAwake() {}
+
+        public void Initialize(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {          
-            Choices = new List<GTChoiceSaveData>();
-            InitializeGenerics(nodeName, gtGraphView, position);
+            InitializeGenerics(in_NodeName, gtGraphView, position);
+            nodeData.connectedPorts = new List<GTNextNodeData>();
+            OnAwake();
         }
 
         public virtual void Draw()
         {
-            TextField myNodeNameTextField = GTElementUtility.CreateTextField(NodeName, null, callback =>
+            string name = nodeData.name;
+            TextField myNodeNameTextField = GTElementUtility.CreateTextField(name, null, callback =>
             {
                 TextField target = (TextField) callback.target;
 
@@ -61,26 +66,26 @@ namespace GT.Elements
 
                 if (string.IsNullOrEmpty(target.value))
                 {
-                    if (!string.IsNullOrEmpty(NodeName))
+                    if (!string.IsNullOrEmpty(name))
                         ++graphView.NameErrorsAmount;
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(NodeName))
+                    if (string.IsNullOrEmpty(name))
                         --graphView.NameErrorsAmount;
                 }
 
-                if (Group == null)
+                if (group == null)
                 {
                     graphView.RemoveUngroupedNode(this);
-                    NodeName = target.value;
+                    nodeData.name = target.value;
                     graphView.AddUngroupedNode(this);
                     return;
                 }
 
-                GTGroup currentGroup = Group;
-                graphView.RemoveGroupedNode(this, Group);
-                NodeName = target.value;
+                GTGroup currentGroup = group;
+                graphView.RemoveGroupedNode(this, group);
+                nodeData.name = target.value;
                 graphView.AddGroupedNode(this, currentGroup);
             });
 

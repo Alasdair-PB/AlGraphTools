@@ -10,6 +10,7 @@ namespace GT.Windows
     using Data.Save;
     using Elements;
     using Enumerations;
+    using GT.Data;
     using Utilities;
 
     public class GTGraphView : GraphView
@@ -198,8 +199,8 @@ namespace GT.Windows
 
                 foreach (GTNode nodeToDelete in nodesToDelete)
                 {
-                    if (nodeToDelete.Group != null)
-                        nodeToDelete.Group.RemoveElement(nodeToDelete);
+                    if (nodeToDelete.group != null)
+                        nodeToDelete.group.RemoveElement(nodeToDelete);
 
                     RemoveUngroupedNode(nodeToDelete);
                     nodeToDelete.DisconnectAllPorts();
@@ -254,16 +255,16 @@ namespace GT.Windows
 
                 if (string.IsNullOrEmpty(gtGroup.title))
                 {
-                    if (!string.IsNullOrEmpty(gtGroup.OldTitle))
+                    if (!string.IsNullOrEmpty(gtGroup.oldTitle))
                         ++NameErrorsAmount;
                 }
                 else
                 {
-                    if (string.IsNullOrEmpty(gtGroup.OldTitle))
+                    if (string.IsNullOrEmpty(gtGroup.oldTitle))
                         --NameErrorsAmount;
                 }
                 RemoveGroup(gtGroup);
-                gtGroup.OldTitle = gtGroup.title;
+                gtGroup.oldTitle = gtGroup.title;
                 AddGroup(gtGroup);
             };
         }
@@ -277,8 +278,8 @@ namespace GT.Windows
                     foreach (Edge edge in changes.edgesToCreate)
                     {
                         GTNode nextNode = (GTNode) edge.input.node;
-                        GTChoiceSaveData choiceData = (GTChoiceSaveData) edge.output.userData;
-                        choiceData.NodeID = nextNode.ID;
+                        GTNextNodeData choiceData = (GTNextNodeData) edge.output.userData;
+                        choiceData.id = nextNode.nodeData.id;
                     }
                 }
 
@@ -292,8 +293,8 @@ namespace GT.Windows
                             continue;
 
                         Edge edge = (Edge) element;
-                        GTChoiceSaveData choiceData = (GTChoiceSaveData) edge.output.userData;
-                        choiceData.NodeID = "";
+                        GTNextNodeData choiceData = (GTNextNodeData) edge.output.userData;
+                        choiceData.id = "";
                     }
                 }
 
@@ -303,7 +304,7 @@ namespace GT.Windows
 
         public void AddUngroupedNode(GTNode node)
         {
-            string nodeName = node.NodeName.ToLower();
+            string nodeName = node.nodeData.name.ToLower();
 
             if (!ungroupedNodes.ContainsKey(nodeName))
             {
@@ -327,7 +328,7 @@ namespace GT.Windows
 
         public void RemoveUngroupedNode(GTNode node)
         {
-            string nodeName = node.NodeName.ToLower();
+            string nodeName = node.nodeData.name.ToLower();
             List<GTNode> ungroupedNodesList = ungroupedNodes[nodeName].Nodes;
             ungroupedNodesList.Remove(node);
             node.ResetStyle();
@@ -369,7 +370,7 @@ namespace GT.Windows
 
         private void RemoveGroup(GTGroup group)
         {
-            string oldGroupName = group.OldTitle.ToLower();
+            string oldGroupName = group.oldTitle.ToLower();
             List<GTGroup> groupsList = groups[oldGroupName].Groups;
 
             groupsList.Remove(group);
@@ -388,8 +389,8 @@ namespace GT.Windows
 
         public void AddGroupedNode(GTNode node, GTGroup group)
         {
-            string nodeName = node.NodeName.ToLower();
-            node.Group = group;
+            string nodeName = node.nodeData.name.ToLower();
+            node.group = group;
 
             if (!groupedNodes.ContainsKey(group))
                 groupedNodes.Add(group, new SerializableDictionary<string, GTNodeErrorData>());
@@ -416,8 +417,8 @@ namespace GT.Windows
 
         public void RemoveGroupedNode(GTNode node, GTGroup group)
         {
-            string nodeName = node.NodeName.ToLower();
-            node.Group = null;
+            string nodeName = node.nodeData.name.ToLower();
+            node.group = null;
             List<GTNode> groupedNodesList = groupedNodes[group][nodeName].Nodes;
 
             groupedNodesList.Remove(node);
