@@ -5,9 +5,9 @@ using System.Collections.Generic;
 namespace GT.Data
 {
     [Serializable]
-    public class GTNextNodeData 
+    public class GTNodeConnection 
     {
-        public GTNextNodeData()
+        public GTNodeConnection()
         {
             data = "";
             nodeData = new();
@@ -16,9 +16,9 @@ namespace GT.Data
         [field: SerializeField] public string data { get; set; }
         [field: SerializeReference] public SerializableNodeData nodeData { get; set; }
 
-        public GTNextNodeData CreateNewCopy()
+        public virtual GTNodeConnection CreateNewCopy()
         {
-            GTNextNodeData newNode = new GTNextNodeData();
+            GTNodeConnection newNode = new GTNodeConnection();
             newNode.data = this.data;
             newNode.nodeData.NodePtr = this.nodeData.NodePtr;
             return newNode;

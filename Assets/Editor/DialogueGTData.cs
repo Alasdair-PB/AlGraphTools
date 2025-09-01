@@ -3,7 +3,7 @@ using GT.Data;
 using System;
 
 
-[Serializable]
+[Serializable] // Would be serilizable node data?
 public class DialogueTableGTData : GTNodeData
 {
     [field: SerializeField] public string dataTest { get; set; }

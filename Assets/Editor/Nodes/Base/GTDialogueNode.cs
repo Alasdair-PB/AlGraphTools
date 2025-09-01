@@ -15,12 +15,16 @@ namespace GT.Elements
 
     public class GTDialogueNode : GTNode
     {
-        public DialogueGTData Data { get; set; }
-        public List<GTNextNodeData> Choices { get; set; }
-
-        public override void OnAwake()
-        {            
-            Choices = new List<GTNextNodeData>();
+        public override GTNodeData CreateNodeData()
+        {
+            DialogueGTData newNodeData = new DialogueGTData();
+            GTNodeConnection choiceData = new GTNodeConnection()
+            {
+                data = "Next Node",
+            };
+            newNodeData.connectedPorts.Add(choiceData);
+            newNodeData.nodeType = GTNodeType.SingleChoice;
+            return newNodeData;
         }
 
         public override void OnDraw()

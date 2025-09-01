@@ -11,6 +11,7 @@ namespace GT.Elements
     using Data.Save;
     using Enumerations;
     using GT.Data;
+    using PlasticGui.WorkspaceWindow.Items;
     using Utilities;
     using Windows;
 
@@ -21,28 +22,22 @@ namespace GT.Elements
         protected GTGraphView graphView;
         private Color defaultBackgroundColor;
 
-        public string GetNodeId()
-        {
-            return nodeData.id;
-        }
-
         protected string CreateNewGuid()
         {
             return Guid.NewGuid().ToString();
         }
 
-
         // Returns a pointer to node data from the port's userData if possible
         public virtual GTNodeData GetNodeConnection(Port outPort)
         {
-            GTNextNodeData choiceData = (GTNextNodeData) outPort.userData;
+            GTNodeConnection choiceData = (GTNodeConnection) outPort.userData;
             return choiceData.nodeData.NodePtr;
         }
 
         // Assigns this node data to the out channel if valid. Otherwise return false. 
         public virtual bool OnEdgeConnected(Edge edge)
         {
-            GTNextNodeData choiceData = (GTNextNodeData) edge.output.userData;
+            GTNodeConnection choiceData = (GTNodeConnection) edge.output.userData;
 
             int inputIndex = edge.input.parent.IndexOf(edge.input);
             int outputIndex = edge.output.parent.IndexOf(edge.output);
@@ -55,20 +50,17 @@ namespace GT.Elements
         // Removes reference to this node from an out channel if valid.  
         public virtual void OnEdgeCleared(Edge edge)
         {
-            GTNextNodeData channelData = (GTNextNodeData) edge.output.userData;
+            GTNodeConnection channelData = (GTNodeConnection) edge.output.userData;
             // Switch based on type or port number?
             // return if wrong type?
             channelData.nodeData.NodePtr = null;
         }
 
-        public virtual void CreateNodeData(string in_NodeName)
+        public virtual GTNodeData CreateNodeData()
         {
-            nodeData = new GTNodeData();
-            nodeData.id = CreateNewGuid();
-            nodeData.name = in_NodeName;
+            GTNodeData newNodeData = new GTNodeData();
+            return newNodeData;
         }
-
-        public virtual void OnAwake() { }
         public virtual void OnDraw() { }
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
@@ -80,7 +72,10 @@ namespace GT.Elements
 
         public void InitializeGenerics(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {
-            CreateNodeData(in_NodeName);
+            nodeData = CreateNodeData();
+            nodeData.id = CreateNewGuid();
+            nodeData.name = in_NodeName;
+
             SetPosition(new Rect(position, Vector2.zero));
             graphView = gtGraphView;
             defaultBackgroundColor = new Color(29f / 255f, 29f / 255f, 30f / 255f);
@@ -92,8 +87,6 @@ namespace GT.Elements
         public void Initialize(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {          
             InitializeGenerics(in_NodeName, gtGraphView, position);
-            nodeData.connectedPorts = new List<GTNextNodeData>();
-            OnAwake();
         }
 
         private void DrawTextField()

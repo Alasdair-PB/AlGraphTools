@@ -12,21 +12,35 @@ namespace GT.Elements
 
     public class GTMultipleChoiceNode : GTNode
     {
-        public override void OnAwake()
+        public override GTNodeData CreateNodeData()
         {
-            nodeData.nodeType = GTNodeType.MultipleChoice;
-            GTNextNodeData choiceData = new GTNextNodeData()
+            GTNodeData newNodeData = new GTNodeData();
+            GTNodeConnection choiceData = new GTNodeConnection()
             {
-                data ="new Choice" 
+                data = "Next Node",
             };
-            nodeData.connectedPorts.Add(choiceData);
+            newNodeData.connectedPorts.Add(choiceData);
+            newNodeData.nodeType = GTNodeType.MultipleChoice;
+            return newNodeData;
+        }
+
+        public override void OnDraw()
+        {
+            DrawAddOutChannel();
+            //DrawAddOutDifChannel();
+            foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
+            {
+                Port outPort = CreateChoicePort(outChannel);
+                outputContainer.Add(outPort);
+            }
+            RefreshExpandedState();
         }
 
         public void DrawAddOutChannel()
         {
             Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
             {
-                GTNextNodeData choiceData = new GTNextNodeData()
+                GTNodeConnection choiceData = new GTNodeConnection()
                 {
                     data = "new Choice"
                 };
@@ -43,7 +57,7 @@ namespace GT.Elements
         {
             Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
             {
-                GTNextNodeData choiceData = new GTNextNodeData()
+                GTNodeConnection choiceData = new GTNodeConnection()
                 {
                     data = "new Choice"
                 };
@@ -56,23 +70,11 @@ namespace GT.Elements
             mainContainer.Insert(1, addChoiceButton);
         }*/
 
-        public override void OnDraw()
-        {
-            DrawAddOutChannel();
-            //DrawAddOutDifChannel();
-            foreach (GTNextNodeData outChannel in nodeData.connectedPorts)
-            {
-                Port outPort = CreateChoicePort(outChannel);
-                outputContainer.Add(outPort);
-            }
-            RefreshExpandedState();
-        }
-
         private Port CreateChoicePort(object userData)
         {
             Port choicePort = this.CreatePort();
             choicePort.userData = userData;
-            GTNextNodeData choiceData = (GTNextNodeData)userData;
+            GTNodeConnection choiceData = (GTNodeConnection)userData;
 
             Button deleteChoiceButton = GTElementUtility.CreateButton("X", () =>
             {

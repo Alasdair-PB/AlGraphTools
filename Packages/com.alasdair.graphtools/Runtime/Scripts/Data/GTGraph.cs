@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace GT.Data.Save
 {
+    // To refactor for templated nodeData
     public class GTGraph : ScriptableObject, ISerializationCallbackReceiver
     {
         [field: SerializeField] public string FileName { get; set; }
@@ -12,12 +13,16 @@ namespace GT.Data.Save
         [field: SerializeField] public List<string> OldUngroupedNodeNames { get; set; }
         [field: SerializeField] public SerializableDictionary<string, List<string>> OldGroupedNodeNames { get; set; }
 
+        public virtual void CreateNodeList()
+        {
+            Nodes = new List<GTNodeData>();
+        }
+
         public void Initialize(string fileName)
         {
             FileName = fileName;
-
             Groups = new List<GTGroupSaveData>();
-            Nodes = new List<GTNodeData>();
+            CreateNodeList();
         }
 
         public GTNodeData GetStartingNode()

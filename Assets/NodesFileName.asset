@@ -15,34 +15,45 @@ MonoBehaviour:
   <FileName>k__BackingField: NodesFileName
   <Groups>k__BackingField: []
   <Nodes>k__BackingField:
-  - <id>k__BackingField: 07b872f9-dad0-42ee-906f-6d3032c3f727
-    nodeGuid: 8b441cb6-3a14-489c-8d81-2ee663762b9a
+  - <id>k__BackingField: c9e343e6-bb33-4ccd-a7a2-d0df49a7781c
+    nodeGuid: dfdd1c2b-37b9-4a19-b98b-e34d9078c068
     <name>k__BackingField: NodeName
-    <data>k__BackingField: 
     <connectedPorts>k__BackingField:
     - <data>k__BackingField: Next Node
       <nodeData>k__BackingField:
-        rid: 5101683410896945162
+        rid: 5101683410896945186
     connectedGuids:
-    - 3a26d982-b6f1-4504-8cdc-1e5a2621a904
+    - 8001a3ad-cad9-4923-b9f6-b0f00ad59775
     <nodeType>k__BackingField: 0
     <isStartingNode>k__BackingField: 0
     <groupID>k__BackingField: 
-    <position>k__BackingField: {x: 377, y: 209.5}
-  - <id>k__BackingField: 4a1cf275-fbef-4902-9328-e6232c8d3a26
-    nodeGuid: 3a26d982-b6f1-4504-8cdc-1e5a2621a904
+    <position>k__BackingField: {x: 309, y: 210.5}
+  - <id>k__BackingField: 59a9f15c-f122-4764-875c-d0ebc285eddc
+    nodeGuid: 8001a3ad-cad9-4923-b9f6-b0f00ad59775
     <name>k__BackingField: newName
-    <data>k__BackingField: 
     <connectedPorts>k__BackingField:
     - <data>k__BackingField: Next Node
       <nodeData>k__BackingField:
-        rid: 5101683410896945163
+        rid: 5101683410896945187
     connectedGuids:
     - 
     <nodeType>k__BackingField: 0
     <isStartingNode>k__BackingField: 0
     <groupID>k__BackingField: 
-    <position>k__BackingField: {x: 656.5, y: 326}
+    <position>k__BackingField: {x: 528.5, y: 361}
+  - <id>k__BackingField: dd050c13-a5bf-48ca-a0ee-fc5ced666612
+    nodeGuid: 9506fe4a-6867-489b-bcb5-2d25101ded27
+    <name>k__BackingField: happy
+    <connectedPorts>k__BackingField:
+    - <data>k__BackingField: Next Node
+      <nodeData>k__BackingField:
+        rid: 5101683410896945188
+    connectedGuids:
+    - 
+    <nodeType>k__BackingField: 0
+    <isStartingNode>k__BackingField: 0
+    <groupID>k__BackingField: 
+    <position>k__BackingField: {x: 598, y: 226}
   <OldGroupNames>k__BackingField: []
   <OldUngroupedNodeNames>k__BackingField: []
   <OldGroupedNodeNames>k__BackingField:
@@ -50,9 +61,12 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 5101683410896945162
+    - rid: 5101683410896945186
       type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
       data: 
-    - rid: 5101683410896945163
+    - rid: 5101683410896945187
+      type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
+      data: 
+    - rid: 5101683410896945188
       type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
       data: 

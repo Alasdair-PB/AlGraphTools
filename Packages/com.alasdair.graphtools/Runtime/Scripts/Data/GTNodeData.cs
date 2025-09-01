@@ -23,23 +23,20 @@ namespace GT.Data
     }
 
 
+    // To Refactor as abstract
     [Serializable]
     public class GTNodeData
     {
         [field: SerializeField] public string id { get; set; } // To replace with nodeGuid
         [SerializeField] private string nodeGuid = System.Guid.NewGuid().ToString();
         public string Guid => nodeGuid;
-
-
-        [field: SerializeField] public string name { get; set; }
-        [field: SerializeField] public string data { get; set; }
-        [field: SerializeField] public List<GTNextNodeData> connectedPorts { get; set; }
+        [field: SerializeField] public string name { get; set; } // To Remove
+        [field: SerializeField] public List<GTNodeConnection> connectedPorts { get; set; }
         [SerializeField] private List<string> connectedGuids = new();
-
-        [field: SerializeField] public GTNodeType nodeType { get; set; }
-        [field: SerializeField] public bool isStartingNode { get; set; }
-        [field: SerializeField] public string groupID { get; set; }
-        [field: SerializeField] public Vector2 position { get; set; }
+        [field: SerializeField] public GTNodeType nodeType { get; set; } // To Remove
+        [field: SerializeField] public bool isStartingNode { get; set; } // To Remove
+        [field: SerializeField] public string groupID { get; set; } // Investigate refactor to remove from this object
+        [field: SerializeField] public Vector2 position { get; set; } // Investigate refactor to remove from this object
 
         public virtual List<SerializableNodeData> GetSerializedNodes()
         {
@@ -47,6 +44,28 @@ namespace GT.Data
             foreach (var node in connectedPorts)
                 serializedNodes.Add(node?.nodeData);
             return serializedNodes;
+        }
+
+        public virtual GTNodeData OnCreateCopy()
+        {
+            GTNodeData newNode = new GTNodeData();
+            return newNode;
+        }
+
+        public GTNodeData CreateNewCopy()
+        {
+            GTNodeData newNode = OnCreateCopy();
+
+            newNode.id = this.id;
+            newNode.name = this.name;
+            newNode.nodeType = this.nodeType;
+            newNode.groupID = this.groupID;
+            newNode.position = this.position;
+            newNode.connectedPorts = new List<GTNodeConnection>();
+
+            foreach (GTNodeConnection outChannelData in connectedPorts)
+                newNode.connectedPorts.Add(outChannelData.CreateNewCopy());
+            return newNode;
         }
 
         public void OnBeforeSerialize(Dictionary<GTNodeData, string> nodeToGuid)
@@ -86,8 +105,7 @@ namespace GT.Data
         {
             id = "";
             name = "";
-            data = "";
-            connectedPorts = new List<GTNextNodeData>();
+            connectedPorts = new List<GTNodeConnection>();
             nodeType = GTNodeType.SingleChoice;
             isStartingNode = false;
             groupID = "";
@@ -102,27 +120,6 @@ namespace GT.Data
                 foreach (var accessor in node.GetAllReferences())
                     yield return accessor;
             }
-        }
-
-        public virtual GTNodeData CreateNewCopy()
-        {
-            GTNodeData newNode = new GTNodeData()
-            {
-                id = this.id,
-                name = this.name,
-                data = this.data,
-                nodeType = this.nodeType,
-                isStartingNode = this.isStartingNode,
-                groupID = this.groupID,
-                position = this.position,
-            };
-
-            newNode.connectedPorts = new List<GTNextNodeData>();
-            foreach (GTNextNodeData outChannelData in connectedPorts)
-            {
-                newNode.connectedPorts.Add(outChannelData.CreateNewCopy());
-            }
-            return newNode;
         }
     }
 }
