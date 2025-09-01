@@ -78,9 +78,6 @@ namespace GT.Data
                 else
                 {   if (serializedNodes[i] == null)
                         serializedNodes[i] = new();
-
-                    //foreach (var accessor in serializedNodes[i].GetAllReferences())
-                     //       accessor.Setter(new());
                 }
             }
         }
@@ -99,7 +96,8 @@ namespace GT.Data
 
         public IEnumerable<(Func<GTNodeData> Getter, Action<GTNodeData> Setter)> GetAllReferences()
         {
-            foreach (var node in connectedPorts)
+            List<SerializableNodeData> allRefs = GetSerializedNodes();
+            foreach (var node in allRefs)
             {
                 foreach (var accessor in node.GetAllReferences())
                     yield return accessor;

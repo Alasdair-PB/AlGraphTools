@@ -16,27 +16,27 @@ MonoBehaviour:
   <Groups>k__BackingField: []
   <Nodes>k__BackingField:
   - <id>k__BackingField: 07b872f9-dad0-42ee-906f-6d3032c3f727
-    nodeGuid: 35b72eae-1611-460b-9068-c2986d4ecf8e
+    nodeGuid: 8b441cb6-3a14-489c-8d81-2ee663762b9a
     <name>k__BackingField: NodeName
     <data>k__BackingField: 
     <connectedPorts>k__BackingField:
     - <data>k__BackingField: Next Node
       <nodeData>k__BackingField:
-        rid: 5101683410819088392
+        rid: 5101683410896945162
     connectedGuids:
-    - 10b4d5e7-447d-4477-8014-1228c33ba7b1
+    - 3a26d982-b6f1-4504-8cdc-1e5a2621a904
     <nodeType>k__BackingField: 0
     <isStartingNode>k__BackingField: 0
     <groupID>k__BackingField: 
     <position>k__BackingField: {x: 377, y: 209.5}
   - <id>k__BackingField: 4a1cf275-fbef-4902-9328-e6232c8d3a26
-    nodeGuid: 10b4d5e7-447d-4477-8014-1228c33ba7b1
-    <name>k__BackingField: x
+    nodeGuid: 3a26d982-b6f1-4504-8cdc-1e5a2621a904
+    <name>k__BackingField: newName
     <data>k__BackingField: 
     <connectedPorts>k__BackingField:
     - <data>k__BackingField: Next Node
       <nodeData>k__BackingField:
-        rid: 5101683410819088393
+        rid: 5101683410896945163
     connectedGuids:
     - 
     <nodeType>k__BackingField: 0
@@ -50,9 +50,9 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 5101683410819088392
+    - rid: 5101683410896945162
       type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
       data: 
-    - rid: 5101683410819088393
+    - rid: 5101683410896945163
       type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
       data: 
