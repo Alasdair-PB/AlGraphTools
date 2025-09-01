@@ -20,7 +20,7 @@ namespace GT.Data
         {
             GTNextNodeData newNode = new GTNextNodeData();
             newNode.data = this.data;
-            newNode.nodeData = this.nodeData;
+            newNode.nodeData.NodePtr = this.nodeData.NodePtr;
             return newNode;
         }
 
