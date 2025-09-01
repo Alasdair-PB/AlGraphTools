@@ -56,10 +56,8 @@ namespace GT.Elements
             mainContainer.Insert(1, addChoiceButton);
         }*/
 
-        public override void Draw()
+        public override void OnDraw()
         {
-            base.Draw();
-
             DrawAddOutChannel();
             //DrawAddOutDifChannel();
             foreach (GTNextNodeData outChannel in nodeData.connectedPorts)

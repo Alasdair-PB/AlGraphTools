@@ -26,6 +26,51 @@ namespace GT.Elements
             return nodeData.id;
         }
 
+        protected string CreateNewGuid()
+        {
+            return Guid.NewGuid().ToString();
+        }
+
+
+        // Returns a pointer to node data from the port's userData if possible
+        public virtual GTNodeData GetNodeConnection(Port outPort)
+        {
+            GTNextNodeData choiceData = (GTNextNodeData) outPort.userData;
+            return choiceData.nodeData.NodePtr;
+        }
+
+        // Assigns this node data to the out channel if valid. Otherwise return false. 
+        public virtual bool OnEdgeConnected(Edge edge)
+        {
+            GTNextNodeData choiceData = (GTNextNodeData) edge.output.userData;
+
+            int inputIndex = edge.input.parent.IndexOf(edge.input);
+            int outputIndex = edge.output.parent.IndexOf(edge.output);
+
+            // If valid port number and data type then assign this node to connection
+            choiceData.nodeData.NodePtr = nodeData;
+            return true;
+        }
+
+        // Removes reference to this node from an out channel if valid.  
+        public virtual void OnEdgeCleared(Edge edge)
+        {
+            GTNextNodeData channelData = (GTNextNodeData) edge.output.userData;
+            // Switch based on type or port number?
+            // return if wrong type?
+            channelData.nodeData.NodePtr = null;
+        }
+
+        public virtual void CreateNodeData(string in_NodeName)
+        {
+            nodeData = new GTNodeData();
+            nodeData.id = CreateNewGuid();
+            nodeData.name = in_NodeName;
+        }
+
+        public virtual void OnAwake() { }
+        public virtual void OnDraw() { }
+
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
             evt.menu.AppendAction("Disconnect Input Ports", actionEvent => DisconnectInputPorts());
@@ -35,9 +80,7 @@ namespace GT.Elements
 
         public void InitializeGenerics(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {
-            nodeData = new GTNodeData();
-            nodeData.id = Guid.NewGuid().ToString();
-            nodeData.name = in_NodeName;
+            CreateNodeData(in_NodeName);
             SetPosition(new Rect(position, Vector2.zero));
             graphView = gtGraphView;
             defaultBackgroundColor = new Color(29f / 255f, 29f / 255f, 30f / 255f);
@@ -46,8 +89,6 @@ namespace GT.Elements
             extensionContainer.AddToClassList("gt-node__extension-container");
         }
 
-        public virtual void OnAwake() {}
-
         public void Initialize(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {          
             InitializeGenerics(in_NodeName, gtGraphView, position);
@@ -55,13 +96,12 @@ namespace GT.Elements
             OnAwake();
         }
 
-        public virtual void Draw()
+        private void DrawTextField()
         {
             string name = nodeData.name;
             TextField myNodeNameTextField = GTElementUtility.CreateTextField(name, null, callback =>
             {
-                TextField target = (TextField) callback.target;
-
+                TextField target = (TextField)callback.target;
                 target.value = callback.newValue.RemoveWhitespaces().RemoveSpecialCharacters();
 
                 if (string.IsNullOrEmpty(target.value))
@@ -96,8 +136,17 @@ namespace GT.Elements
             );
 
             titleContainer.Insert(0, myNodeNameTextField);
+        }
+
+        public void Draw()
+        {
+            DrawTextField();
+            // foreach input draw input
             Port inputPort = this.CreatePort("Node Connection", Orientation.Horizontal, Direction.Input, Port.Capacity.Multi);
             inputContainer.Add(inputPort);
+
+            // foreach output draw output
+            OnDraw();
         }
 
         public void DisconnectAllPorts()

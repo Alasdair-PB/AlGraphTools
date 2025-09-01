@@ -275,12 +275,15 @@ namespace GT.Windows
             {
                 if (changes.edgesToCreate != null)
                 {
-                    foreach (Edge edge in changes.edgesToCreate)
+                    List<Edge> validEdges = new List<Edge>();
+                    foreach (var edge in changes.edgesToCreate)
                     {
-                        GTNode nextNode = (GTNode) edge.input.node;
-                        GTNextNodeData choiceData = (GTNextNodeData) edge.output.userData;
-                        choiceData.id = nextNode.nodeData.id;
+                        GTNode nextNode = (GTNode)edge.input.node;
+
+                        if (nextNode.OnEdgeConnected(edge))
+                            validEdges.Add(edge);
                     }
+                    changes.edgesToCreate = validEdges;
                 }
 
                 if (changes.elementsToRemove != null)
@@ -293,8 +296,8 @@ namespace GT.Windows
                             continue;
 
                         Edge edge = (Edge) element;
-                        GTNextNodeData choiceData = (GTNextNodeData) edge.output.userData;
-                        choiceData.id = "";
+                        GTNode nextNode = (GTNode) edge.input.node;
+                        nextNode.OnEdgeCleared(edge);
                     }
                 }
 

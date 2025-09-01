@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace GT.Utilities
 {
+    using Codice.CM.Common.Tree;
     using Data;
     using Data.Save;
     using Elements;
@@ -23,7 +24,9 @@ namespace GT.Utilities
         private List<GTGroup> groups;
 
         private Dictionary<string, GTGroup> loadedGroups;
-        private Dictionary<string, GTNode> loadedNodes;
+        private Dictionary<GTNodeData, GTNode> loadedNodes;
+        private Dictionary<GTNodeData, GTNodeData> graphToObjectMap;
+
 
         public void Initialize(GTGraphView gtGraphView, string filePath, string graphName)
         {
@@ -35,7 +38,27 @@ namespace GT.Utilities
             groups = new List<GTGroup>();
 
             loadedGroups = new Dictionary<string, GTGroup>();
-            loadedNodes = new Dictionary<string, GTNode>();
+            loadedNodes = new Dictionary<GTNodeData, GTNode>();
+            graphToObjectMap = new Dictionary<GTNodeData, GTNodeData>();
+        }
+        GTNodeData CreateCopyFromGraph(GTNode in_node)
+        {
+            GTNodeData nodeData = in_node.nodeData.CreateNewCopy();
+            graphToObjectMap.Add(in_node.nodeData, nodeData);
+            return nodeData;
+        }
+
+        GTNode CreateCopyFromObject(GTNodeData nodeData)
+        {
+            GTNode newNode = graphView.CreateNode(nodeData.name, nodeData.nodeType, nodeData.position, false);
+            newNode.nodeData = nodeData.CreateNewCopy();
+            newNode.Draw();
+
+            graphToObjectMap.Add(newNode.nodeData, nodeData);
+            loadedNodes.Add(newNode.nodeData, newNode);
+            graphView.AddElement(newNode);
+
+            return newNode;
         }
 
         public void Save()
@@ -71,6 +94,19 @@ namespace GT.Utilities
             graphData.Groups.Add(groupData);
         }
 
+        private void SaveNodeReferences(GTGraph graphData)
+        {
+            foreach (GTNodeData node in graphData.Nodes)
+            {
+                foreach (var (getter, setter) in node.GetAllReferences())
+                {
+                    var oldRef = getter();
+                    if (oldRef != null && graphToObjectMap.ContainsKey(oldRef))
+                        setter(graphToObjectMap[oldRef]);
+                }
+            }
+        }
+
         private void SaveNodes(GTGraph graphData)
         {
             SerializableDictionary<string, List<string>> groupedNodeNames = new SerializableDictionary<string, List<string>>();
@@ -86,11 +122,13 @@ namespace GT.Utilities
                 }
                 ungroupedNodeNames.Add(node.nodeData.name);
             }
+            SaveNodeReferences(graphData);
         }
+
+
         private void SaveNodeToGraph(GTNode in_node, GTGraph graphData)
         {
-            Debug.Log(in_node.nodeData.connectedPorts.Count + "This is the count on save called");
-            GTNodeData nodeData = in_node.nodeData.CreateNewCopy();
+            GTNodeData nodeData = CreateCopyFromGraph(in_node);
             nodeData.groupID = in_node.group?.id;
             nodeData.position = in_node.GetPosition().position;
             graphData.Nodes.Add(nodeData);
@@ -112,6 +150,7 @@ namespace GT.Utilities
             }
             LoadGroups(graphData.Groups);
             LoadNodes(graphData.Nodes);
+            LoadNodeReferecnes();
             LoadNodesConnections();
             return true;
         }
@@ -126,38 +165,48 @@ namespace GT.Utilities
             }
         }
 
+        private void LoadNodeReferecnes()
+        {
+            foreach (GTNode node in loadedNodes.Values)
+            {
+                var reverseMap = graphToObjectMap.ToDictionary(kv => kv.Value, kv => kv.Key);
+
+                foreach (var (getter, setter) in node.nodeData.GetAllReferences())
+                {
+                    var currentValue = getter();
+                    if (currentValue != null && reverseMap.TryGetValue(currentValue, out var key))
+                        setter(key);
+                }
+            }
+        }
+
         private void LoadNodes(List<GTNodeData> in_node)
         {
             foreach (GTNodeData nodeData in in_node)
             {
-                GTNode node = graphView.CreateNode(nodeData.name, nodeData.nodeType, nodeData.position, false);
-                node.nodeData = nodeData.CreateNewCopy();
-                node.Draw();
-
-                graphView.AddElement(node);
-                loadedNodes.Add(node.GetNodeId(), node);
+                GTNode newNode = CreateCopyFromObject(nodeData);
 
                 if (string.IsNullOrEmpty(nodeData.groupID))
                     continue;
 
                 GTGroup group = loadedGroups[nodeData.groupID];
-                node.group = group;
-                group.AddElement(node);
+                newNode.group = group;
+                group.AddElement(newNode);
             }
         }
 
         private void LoadNodesConnections()
         {
-            foreach (KeyValuePair<string, GTNode> loadedNode in loadedNodes)
+            foreach (KeyValuePair<GTNodeData, GTNode> loadedNode in loadedNodes)
             {
                 foreach (Port outPort in loadedNode.Value.outputContainer.Children())
                 {
-                    GTNextNodeData choiceData = (GTNextNodeData)outPort.userData;
-
-                    if (string.IsNullOrEmpty(choiceData.id))
+                    loadedNode.Value.GetNodeConnection(outPort);
+                    GTNodeData portConnection = loadedNode.Value.GetNodeConnection(outPort);
+                    if (portConnection == null)
                         continue;
 
-                    GTNode nextNode = loadedNodes[choiceData.id];
+                    GTNode nextNode = loadedNodes[portConnection];
                     Port inPort = (Port) nextNode.inputContainer.Children().First();
                     Edge edge = outPort.ConnectTo(inPort);
 

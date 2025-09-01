@@ -11,6 +11,13 @@ namespace GT.Elements
 
     public class GTSingleChoiceNode : GTNode
     {
+        public override void CreateNodeData(string in_NodeName)
+        {
+            nodeData = new GTNodeData();
+            nodeData.id = CreateNewGuid();
+            nodeData.name = in_NodeName;
+        }
+
         public override void OnAwake()
         {
             nodeData.nodeType = GTNodeType.SingleChoice;
@@ -18,15 +25,12 @@ namespace GT.Elements
             GTNextNodeData choiceData = new GTNextNodeData()
             {
                 data = "Next Node",
-                id = ""
             };
             nodeData.connectedPorts.Add(choiceData);
         }
 
-        public override void Draw()
+        public override void OnDraw()
         {
-            base.Draw();
-
             foreach (GTNextNodeData outChannel in nodeData.connectedPorts)
             {
                 // Data is not needed- this is the named output
@@ -34,7 +38,6 @@ namespace GT.Elements
                 outPort.userData = outChannel;
                 outputContainer.Add(outPort);
             }
-            Debug.Log(nodeData.connectedPorts.Count);
             RefreshExpandedState();
         }
     }

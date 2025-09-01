@@ -23,11 +23,9 @@ namespace GT.Elements
             Choices = new List<GTNextNodeData>();
         }
 
-        public override void Draw()
+        public override void OnDraw()
         {
-            base.Draw();
-
-            VisualElement customDataContainer = new VisualElement();
+            /*VisualElement customDataContainer = new VisualElement();
             customDataContainer.AddToClassList("gt-node__custom-data-container");
             Foldout textFoldout = GTElementUtility.CreateFoldout("Node Text");
             TextField textTextField = GTElementUtility.CreateTextArea(Data.Text, null, callback => Data.Text = callback.newValue);
@@ -39,7 +37,7 @@ namespace GT.Elements
 
             textFoldout.Add(textTextField);
             customDataContainer.Add(textFoldout);
-            extensionContainer.Add(customDataContainer);
+            extensionContainer.Add(customDataContainer);*/
         }
     }
 

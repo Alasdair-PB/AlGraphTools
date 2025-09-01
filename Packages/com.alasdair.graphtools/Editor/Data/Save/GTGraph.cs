@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace GT.Data.Save
 {
-    public class GTGraph : ScriptableObject
+    public class GTGraph : ScriptableObject, ISerializationCallbackReceiver
     {
         [field: SerializeField] public string FileName { get; set; }
         [field: SerializeField] public List<GTGroupSaveData> Groups { get; set; }
@@ -19,5 +19,31 @@ namespace GT.Data.Save
             Groups = new List<GTGroupSaveData>();
             Nodes = new List<GTNodeData>();
         }
+
+        public GTNodeData GetStartingNode()
+        {
+            return Nodes.Count > 0 ? Nodes[0] : null;
+        }
+
+        public void OnBeforeSerialize()
+        {
+            var nodeToGuid = new Dictionary<GTNodeData, string>();
+            foreach (var n in Nodes)
+                nodeToGuid[n] = n.Guid;
+
+            foreach (var n in Nodes)
+                n.OnBeforeSerialize(nodeToGuid);
+        }
+
+        public void OnAfterDeserialize()
+        {
+            var guidToNode = new Dictionary<string, GTNodeData>();
+            foreach (var n in Nodes)
+                guidToNode[n.Guid] = n;
+
+            foreach (var n in Nodes)
+                n.OnAfterDeserialize(guidToNode);
+        }
+
     }
 }
