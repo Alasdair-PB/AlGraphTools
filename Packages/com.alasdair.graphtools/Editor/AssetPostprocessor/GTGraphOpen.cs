@@ -19,7 +19,7 @@ namespace GT.Postprocessor
             if (asset is GTGraph graphAsset)
             {
                 string assetPath = AssetDatabase.GetAssetPath(instanceID);
-                GTEditorWindow.Open(assetPath);
+                GTEditorWindow.Open(asset as GTGraph, assetPath);
                 return true;
             }
             return false; 

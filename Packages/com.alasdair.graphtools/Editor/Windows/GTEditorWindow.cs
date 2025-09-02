@@ -1,14 +1,17 @@
 using System.IO;
+using System;
 using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
 namespace GT.Windows
 {
+    using GT.Data.Save;
     using System;
+    using System.Linq;
     using Utilities;
 
-    public class GTEditorWindow : EditorWindow
+    public abstract class GTEditorWindow : EditorWindow
     {
         private GTGraphView graphView;
         private readonly string defaultFileName = "NodesFileName";
@@ -22,10 +25,24 @@ namespace GT.Windows
         private GTIOUtility loadManager;
         private bool isInitialized = false;
 
-        [MenuItem("Window/GT/Node Graph")]
-        public static void Open()
+        public static void Open(GTGraph graphAsset, string assetPath)
         {
-            GetWindow<GTEditorWindow>("Node Graph");
+            var windowType = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => t.IsSubclassOf(typeof(GTEditorWindow)) && !t.IsAbstract)
+                .FirstOrDefault(t =>
+                {
+                    var attr = t.GetCustomAttributes(typeof(GTEditorAttribute), false)
+                                .FirstOrDefault() as GTEditorAttribute;
+                    return attr != null && attr.GraphType == graphAsset.GetType();
+                });
+
+            if (windowType == null)
+                return;
+
+            var window = GetWindow(windowType, false, "Node Graph") as GTEditorWindow;
+            window.Initialize();
+            window.Load(assetPath);
         }
 
         public static void Open(string assetPath)
@@ -49,7 +66,7 @@ namespace GT.Windows
                 
         }
 
-        private void Initialize()
+        protected virtual void Initialize()
         {
             if (isInitialized) return;
 
