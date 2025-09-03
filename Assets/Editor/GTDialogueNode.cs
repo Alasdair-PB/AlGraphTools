@@ -20,7 +20,7 @@ namespace GT.Elements
         {
             if (!(edge.output.userData is TableConnection)) return false;
 
-            TableConnection choiceData = (TableConnection)edge.output.userData;
+            TableConnection choiceData = (TableConnection) edge.output.userData;
             if (choiceData == null) return false;
             int inputIndex = edge.input.parent.IndexOf(edge.input);
             int outputIndex = edge.output.parent.IndexOf(edge.output);
@@ -54,18 +54,29 @@ namespace GT.Elements
 
         public override void OnAwake()
         {
-            TableConnection choiceData = new TableConnection();
-            nodeData.connectedPorts.Add(choiceData);
+            if (!(nodeData is DialogueGTData)) return;
+
+            //TableConnection choiceData = new TableConnection();
+            //nodeData.connectedPorts.Add(choiceData);
+
+            ((DialogueGTData)nodeData).dialogueTable = new TableConnection();
         }
 
         public override void OnDraw()
         {
-            foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
+            if (!(nodeData is DialogueGTData)) return;
+            DialogueGTData nodeDData = (DialogueGTData)nodeData;
+
+            Port outPort = this.CreatePort("Graph");
+            outPort.userData = nodeDData.dialogueTable;
+            outputContainer.Add(outPort);
+
+            /*foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
             {
                 Port outPort = this.CreatePort("Graph");
                 outPort.userData = outChannel;
                 outputContainer.Add(outPort);
-            }
+            }*/
             RefreshExpandedState();
 
             /*VisualElement customDataContainer = new VisualElement();

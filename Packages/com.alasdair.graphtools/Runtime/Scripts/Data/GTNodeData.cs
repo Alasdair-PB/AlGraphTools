@@ -1,6 +1,3 @@
-using Codice.CM.Client.Differences.Merge;
-using GT.Enumerations;
-using PlasticPipe.PlasticProtocol.Messages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +29,28 @@ namespace GT.Data
     }
 
     [Serializable]
+    public class SerializableNode 
+    {
+        public SerializableNode() { NodePtr = null; }
+
+        [NonSerialized] public GTNodeData NodePtr = null;
+        public GTNodeData NodeData => NodePtr;
+
+        public IEnumerable<(Func<GTNodeData> Getter, Action<GTNodeData> Setter)> GetAllReferences()
+        {
+            yield return (() => NodePtr, value => NodePtr = value);
+            //yield return (() => anotherRef, value => anotherRef = value);
+        }
+
+        public SerializableNodeData CreateNewCopy()
+        {
+            SerializableNodeData copy = new SerializableNodeData();
+            copy.NodePtr = this.NodePtr;
+            return copy;
+        }
+    }
+
+    [Serializable]
     public abstract class GTNodeData
     {
         [SerializeField] private string nodeGuid = System.Guid.NewGuid().ToString();
@@ -49,6 +68,19 @@ namespace GT.Data
             foreach (var node in connectedPorts)
                 serializedNodes.Add(node?.nodeData);
             return serializedNodes;
+
+
+            var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var prop in props)
+            {
+                if (!prop.CanRead || !prop.CanWrite) continue;
+                var value = prop.GetValue(this);
+
+                if (value is SerializableNodeData)
+                    serializedNodes.Add(((SerializableNodeData)value));
+                else if (value is GTNodeConnection)
+                    serializedNodes.Add((((GTNodeConnection)value)?.nodeData));
+            }
         }
 
         public GTNodeData CreateNewCopy()
