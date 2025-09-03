@@ -20,45 +20,38 @@ namespace GT.Elements
         protected GTGraphView graphView;
         private Color defaultBackgroundColor;
 
-    protected GTNode()
-    {
-        var hasAttr = Attribute.IsDefined(this.GetType(), typeof(NodeForDataAttribute));
-        if (!hasAttr)
-            throw new InvalidOperationException($"{GetType().Name} must define [NodeForData] attribute.");
-    }
-    
-    protected string CreateNewGuid()
+        protected GTNode()
         {
-            return Guid.NewGuid().ToString();
+            var hasAttr = Attribute.IsDefined(this.GetType(), typeof(NodeForDataAttribute));
+            if (!hasAttr)
+                throw new InvalidOperationException($"{GetType().Name} must define [NodeForData] attribute.");
         }
 
         // Returns a pointer to node data from the port's userData if possible
-        public virtual GTNodeData GetNodeConnection(Port outPort)
+        public GTNodeData GetNodeConnection(Port outPort)
         {
             GTNodeConnection choiceData = (GTNodeConnection) outPort.userData;
-            return choiceData.nodeData.NodePtr;
+            return choiceData == null ? null : choiceData.nodeData.NodePtr;
+        }
+
+        // Removes reference to this node from an out channel if valid.
+        // Virtual in case a new node would replace the current reference or remove it from a list of references
+        public virtual void OnEdgeCleared(Edge edge)
+        {
+            GTNodeConnection channelData = (GTNodeConnection)edge.output.userData;
+            channelData.nodeData = new();
         }
 
         // Assigns this node data to the out channel if valid. Otherwise return false. 
         public virtual bool OnEdgeConnected(Edge edge)
         {
+            if (!(edge.output.userData is GTNodeConnection))
+                return false;
+
             GTNodeConnection choiceData = (GTNodeConnection) edge.output.userData;
-
-            int inputIndex = edge.input.parent.IndexOf(edge.input);
-            int outputIndex = edge.output.parent.IndexOf(edge.output);
-
-            // If valid port number and data type then assign this node to connection
+            if (choiceData == null) return false;
             choiceData.nodeData.NodePtr = nodeData;
             return true;
-        }
-
-        // Removes reference to this node from an out channel if valid.  
-        public virtual void OnEdgeCleared(Edge edge)
-        {
-            GTNodeConnection channelData = (GTNodeConnection) edge.output.userData;
-            // Switch based on type or port number?
-            // return if wrong type?
-            channelData.nodeData.NodePtr = null;
         }
 
         public GTNodeData CreateNodeData()
@@ -74,11 +67,6 @@ namespace GT.Elements
                 );
             }
             GTNodeData newNodeData = (GTNodeData)Activator.CreateInstance(attr.DataType);
-
-            GTNodeConnection choiceData = new GTNodeConnection()
-            {
-                data = "Next Node",
-            };
             return newNodeData;
         }
 

@@ -13,20 +13,61 @@ namespace GT.Elements
     using Utilities;
     using Windows;
 
+    [NodeForData(typeof(DialogueTableGTData))]
+    public class GTDialogueTable : GTNode
+    {
+        public override bool OnEdgeConnected(Edge edge)
+        {
+            if (!(edge.output.userData is TableConnection)) return false;
+
+            TableConnection choiceData = (TableConnection)edge.output.userData;
+            if (choiceData == null) return false;
+            int inputIndex = edge.input.parent.IndexOf(edge.input);
+            int outputIndex = edge.output.parent.IndexOf(edge.output);
+            choiceData.nodeData.NodePtr = nodeData;
+            return true;
+        }
+
+        public override void OnAwake()
+        {
+            /*GTNodeConnection choiceData = new GTNodeConnection()
+            {
+            };
+            nodeData.connectedPorts.Add(choiceData);*/
+        }
+
+        public override void OnDraw()
+        {
+            /*foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
+            {
+                Port outPort = this.CreatePort("Graph");
+                outPort.userData = outChannel;
+                outputContainer.Add(outPort);
+            }
+            RefreshExpandedState();*/
+        }
+    }
+
     [NodeForData(typeof(DialogueGTData))]
     public class GTDialogueNode : GTNode
     {
+
         public override void OnAwake()
         {
-            GTNodeConnection choiceData = new GTNodeConnection()
-            {
-                data = "Next Node",
-            };
+            TableConnection choiceData = new TableConnection();
             nodeData.connectedPorts.Add(choiceData);
         }
 
         public override void OnDraw()
         {
+            foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
+            {
+                Port outPort = this.CreatePort("Graph");
+                outPort.userData = outChannel;
+                outputContainer.Add(outPort);
+            }
+            RefreshExpandedState();
+
             /*VisualElement customDataContainer = new VisualElement();
             customDataContainer.AddToClassList("gt-node__custom-data-container");
             Foldout textFoldout = GTElementUtility.CreateFoldout("Node Text");

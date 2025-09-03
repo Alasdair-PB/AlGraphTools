@@ -4,7 +4,6 @@ using UnityEngine.UIElements;
 
 namespace GT.Elements
 {
-    using Enumerations;
     using GT.Data;
     using System;
     using Utilities;
@@ -16,7 +15,7 @@ namespace GT.Elements
     {
         public override void OnAwake()
         {
-            GTNodeConnection choiceData = new GTNodeConnection()
+            GTNodeConnection choiceData = new StringDataConnection()
             {
                 data = "Next Node",
             };
@@ -26,7 +25,6 @@ namespace GT.Elements
         public override void OnDraw()
         {
             DrawAddOutChannel();
-            //DrawAddOutDifChannel();
             foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
             {
                 Port outPort = CreateChoicePort(outChannel);
@@ -39,11 +37,8 @@ namespace GT.Elements
         {
             Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
             {
-                GTNodeConnection choiceData = new GTNodeConnection()
-                {
-                    data = "new Choice"
-                };
-
+                StringDataConnection choiceData = new StringDataConnection();
+                choiceData.data = "Next Node";
                 nodeData.connectedPorts.Add(choiceData);
                 Port choicePort = CreateChoicePort(choiceData);
                 outputContainer.Add(choicePort);
@@ -52,28 +47,13 @@ namespace GT.Elements
             mainContainer.Insert(1, addChoiceButton);
         }
 
-        /*public void DrawAddOutDifChannel()
-        {
-            Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
-            {
-                GTNodeConnection choiceData = new GTNodeConnection()
-                {
-                    data = "new Choice"
-                };
-
-                outChannels.Add(choiceData);
-                Port outPort = CreateChoicePort(choiceData);
-                outputContainer.Add(outPort);
-            });
-            addChoiceButton.AddToClassList("gt-node__button");
-            mainContainer.Insert(1, addChoiceButton);
-        }*/
-
         private Port CreateChoicePort(object userData)
         {
             Port choicePort = this.CreatePort();
+            if (!(userData is StringDataConnection)) return choicePort;
+
             choicePort.userData = userData;
-            GTNodeConnection choiceData = (GTNodeConnection)userData;
+            StringDataConnection choiceData = (StringDataConnection) userData;
 
             Button deleteChoiceButton = GTElementUtility.CreateButton("X", () =>
             {

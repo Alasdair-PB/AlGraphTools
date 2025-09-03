@@ -39,6 +39,7 @@ public class DialogueGraphEditor : GTEditorWindow
         nodes.Add(typeof(GTSingleChoiceNode));
         nodes.Add(typeof(GTMultipleChoiceNode));
         nodes.Add(typeof(GTDialogueNode));
+        nodes.Add(typeof(GTDialogueTable));
         return nodes;
     }
 }

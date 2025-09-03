@@ -212,7 +212,6 @@ namespace GT.Utilities
             {
                 foreach (Port outPort in loadedNode.Value.outputContainer.Children())
                 {
-                    loadedNode.Value.GetNodeConnection(outPort);
                     GTNodeData portConnection = loadedNode.Value.GetNodeConnection(outPort);
                     if (portConnection == null)
                         continue;

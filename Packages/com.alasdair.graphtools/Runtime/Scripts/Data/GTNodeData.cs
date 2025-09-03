@@ -22,17 +22,22 @@ namespace GT.Data
             yield return (() => NodePtr, value => NodePtr = value);
             //yield return (() => anotherRef, value => anotherRef = value);
         }
+
+        public SerializableNodeData CreateNewCopy()
+        {
+            SerializableNodeData copy = new SerializableNodeData();
+            copy.NodePtr = this.NodePtr;
+            return copy; 
+        }
     }
 
-
-    // To Refactor as abstract
     [Serializable]
-    public class GTNodeData
+    public abstract class GTNodeData
     {
         [SerializeField] private string nodeGuid = System.Guid.NewGuid().ToString();
         public string Guid => nodeGuid;
         [field: SerializeField] public string name { get; set; } // To Remove
-        [field: SerializeField] public List<GTNodeConnection> connectedPorts { get; set; }
+        [field: SerializeReference] public List<GTNodeConnection> connectedPorts { get; set; }
         [SerializeField] private List<string> connectedGuids = new();
         [field: SerializeField] public string groupID { get; set; } // Investigate refactor to remove from this object
         [field: SerializeField] public Vector2 position { get; set; } // Investigate refactor to remove from this object

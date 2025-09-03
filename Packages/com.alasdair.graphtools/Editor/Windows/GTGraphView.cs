@@ -292,15 +292,17 @@ namespace GT.Windows
             {
                 if (changes.edgesToCreate != null)
                 {
-                    List<Edge> validEdges = new List<Edge>();
-                    foreach (var edge in changes.edgesToCreate)
+                    for (int i = changes.edgesToCreate.Count - 1; i >= 0; i--)
                     {
+                        var edge = changes.edgesToCreate[i];
                         GTNode nextNode = (GTNode)edge.input.node;
 
-                        if (nextNode.OnEdgeConnected(edge))
-                            validEdges.Add(edge);
+                        if (!nextNode.OnEdgeConnected(edge))
+                        {
+                            RemoveElement(edge);
+                            changes.edgesToCreate.RemoveAt(i);
+                        }
                     }
-                    changes.edgesToCreate = validEdges;
                 }
 
                 if (changes.elementsToRemove != null)
@@ -312,15 +314,15 @@ namespace GT.Windows
                         if (element.GetType() != edgeType)
                             continue;
 
-                        Edge edge = (Edge) element;
-                        GTNode nextNode = (GTNode) edge.input.node;
+                        Edge edge = (Edge)element;
+                        GTNode nextNode = (GTNode)edge.input.node;
                         nextNode.OnEdgeCleared(edge);
                     }
                 }
-
                 return changes;
             };
         }
+
         public void AddUngroupedNode(GTNode node)
         {
             string nodeName = node.nodeData.name.ToLower();
