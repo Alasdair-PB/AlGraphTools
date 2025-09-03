@@ -3,13 +3,9 @@ using UnityEngine;
 
 namespace GT.Elements
 {
-    using Data.Save;
-    using Enumerations;
     using GT.Data;
-    using PlasticGui.WorkspaceWindow.Items;
     using System;
     using Utilities;
-    using Windows;
     [Serializable] public class SingleChoiceData : GTNodeData {}
 
     [NodeForData(typeof(SingleChoiceData))]

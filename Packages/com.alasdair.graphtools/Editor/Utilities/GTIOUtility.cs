@@ -7,13 +7,9 @@ using UnityEngine;
 
 namespace GT.Utilities
 {
-    using Codice.CM.Common.Tree;
     using Data;
     using Data.Save;
     using Elements;
-    using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer;
-    using System.IO;
-    using System.Reflection;
     using Windows;
 
     public class GTIOUtility
@@ -62,13 +58,8 @@ namespace GT.Utilities
         {
             Type nodeType = NodeTypeResolver.GetNodeTypeForData(nodeData.GetType());
             Debug.Log(nodeData.GetType().Name);
-            if (nodeType == null)
-            {
-                Debug.Log("ah fuck");
-                return null;
-            }
+            if (nodeType == null) return null;
             GTNode newNode = (GTNode)graphView.CreateNode(nodeData.name, nodeType, nodeData.position, false);
-            /*GTNode newNode = graphView.CreateNode(nodeData.name, nodeData.GetType(), nodeData.position, false);*/
             newNode.nodeData = nodeData.CreateNewCopy();
             newNode.Draw();
 
@@ -187,7 +178,6 @@ namespace GT.Utilities
                 loadedGroups.Add(group.id, group);
             }
         }
-
         private void LoadNodeReferecnes()
         {
             foreach (GTNode node in loadedNodes.Values)
@@ -285,25 +275,6 @@ namespace GT.Utilities
             }
             return asset;
         }
-
-        /*public static T CreateAsset<T>(string path, string assetName) where T : ScriptableObject
-        {
-            T asset = LoadAsset<T>(path, assetName);
-
-            if (asset == null)
-            {            
-                string fullPath = $"{path}/{assetName}.asset";
-                asset = ScriptableObject.CreateInstance<T>();
-                AssetDatabase.CreateAsset(asset, fullPath);
-            }
-            return asset;
-        }
-
-        public static T LoadAsset<T>(string path, string assetName) where T : ScriptableObject
-        {
-            string fullPath = $"{path}/{assetName}.asset";
-            return AssetDatabase.LoadAssetAtPath<T>(fullPath);
-        }*/
 
         public static void SaveAsset(UnityEngine.Object asset)
         {

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -8,10 +7,7 @@ using UnityEngine.UIElements;
 namespace GT.Windows
 {
     using Data.Error;
-    using Data.Save;
     using Elements;
-    using Enumerations;
-    using GT.Data;
     using System.Linq;
     using Utilities;
     public static class NodeTypeResolver
@@ -117,8 +113,6 @@ namespace GT.Windows
 
             foreach(Type nodeType in editorWindow.GetCustomNodeTypes())
                 this.AddManipulator(CreateNodeContextualMenu(("Add Node" + nodeType.Name), nodeType));
-            //this.AddManipulator(CreateNodeContextualMenu("Add Node (Single Choice)", GTNodeType.SingleChoice));
-            //this.AddManipulator(CreateNodeContextualMenu("Add Node (Multiple Choice)", GTNodeType.MultipleChoice));
             this.AddManipulator(CreateGroupContextualMenu());
         }
 
@@ -159,19 +153,6 @@ namespace GT.Windows
         public GTNode CreateNode(string nodeName, Type myNodeType, Vector2 position, bool shouldDraw = true)
         {
             GTNode node = (GTNode) Activator.CreateInstance(myNodeType);
-            node.Initialize(nodeName, this, position);
-
-            if (shouldDraw)
-                node.Draw();
-
-            AddUngroupedNode(node);
-            return node;
-        }
-
-        public GTNode CreateNode(string nodeName, GTNodeType myNodeType, Vector2 position, bool shouldDraw = true)
-        {
-            Type nodeType = Type.GetType($"GT.Elements.GT{myNodeType}Node");
-            GTNode node = (GTNode) Activator.CreateInstance(nodeType);
             node.Initialize(nodeName, this, position);
 
             if (shouldDraw)
@@ -281,7 +262,6 @@ namespace GT.Windows
                 }
             };
         }
-
         private void OnGroupRenamed()
         {
             groupTitleChanged = (group, newTitle) =>
@@ -341,7 +321,6 @@ namespace GT.Windows
                 return changes;
             };
         }
-
         public void AddUngroupedNode(GTNode node)
         {
             string nodeName = node.nodeData.name.ToLower();
