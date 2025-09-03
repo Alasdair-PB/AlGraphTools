@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using System;
 
 namespace GT.Windows
 {
@@ -9,13 +10,14 @@ namespace GT.Windows
 
     public class GTSearchWindow : ScriptableObject, ISearchWindowProvider
     {
+        private GTEditorWindow editorWindow;
         private GTGraphView graphView;
         private Texture2D indentationIcon;
 
-        public void Initialize(GTGraphView gtGraphView)
+        public void Initialize(GTGraphView in_graphView, GTEditorWindow in_editorWindow)
         {
-            graphView = gtGraphView;
-
+            graphView = in_graphView;
+            editorWindow = in_editorWindow;
             indentationIcon = new Texture2D(1, 1);
             indentationIcon.SetPixel(0, 0, Color.clear);
             indentationIcon.Apply();
@@ -27,16 +29,6 @@ namespace GT.Windows
             {
                 new SearchTreeGroupEntry(new GUIContent("Create Elements")),
                 new SearchTreeGroupEntry(new GUIContent("Node Nodes"), 1),
-                new SearchTreeEntry(new GUIContent("Single Choice", indentationIcon))
-                {
-                    userData = GTNodeType.SingleChoice,
-                    level = 2
-                },
-                new SearchTreeEntry(new GUIContent("Multiple Choice", indentationIcon))
-                {
-                    userData = GTNodeType.MultipleChoice,
-                    level = 2
-                },
                 new SearchTreeGroupEntry(new GUIContent("Node Groups"), 1),
                 new SearchTreeEntry(new GUIContent("Single Group", indentationIcon))
                 {
@@ -44,6 +36,16 @@ namespace GT.Windows
                     level = 2
                 }
             };
+
+            foreach (Type nodeType in editorWindow.GetCustomNodeTypes())
+            {
+                searchTreeEntries.Add(
+                    new SearchTreeEntry(new GUIContent(nodeType.Name, indentationIcon))
+                {
+                    userData = nodeType,
+                    level = 2
+                });
+            }
             return searchTreeEntries;
         }
 
@@ -53,18 +55,6 @@ namespace GT.Windows
 
             switch (SearchTreeEntry.userData)
             {
-                case GTNodeType.SingleChoice:
-                {
-                    GTSingleChoiceNode singleChoiceNode = (GTSingleChoiceNode) graphView.CreateNode("NodeName", GTNodeType.SingleChoice, localMousePosition);
-                    graphView.AddElement(singleChoiceNode);
-                    return true;
-                }
-                case GTNodeType.MultipleChoice:
-                {
-                    GTMultipleChoiceNode multipleChoiceNode = (GTMultipleChoiceNode) graphView.CreateNode("NodeName", GTNodeType.MultipleChoice, localMousePosition);
-                    graphView.AddElement(multipleChoiceNode);
-                    return true;
-                }
                 case Group _:
                 {
                     graphView.CreateGroup("NodeGroup", localMousePosition);
@@ -73,6 +63,12 @@ namespace GT.Windows
 
                 default:
                 {
+                    if (editorWindow.GetCustomNodeTypes().Contains((Type)SearchTreeEntry.userData))
+                    {
+                        GTNode node = (GTNode) graphView.CreateNode("NodeName", (Type)SearchTreeEntry.userData, localMousePosition);
+                        graphView.AddElement(node);
+                        return true;
+                    }
                     return false;
                 }
             }

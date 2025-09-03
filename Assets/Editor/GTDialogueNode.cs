@@ -13,18 +13,16 @@ namespace GT.Elements
     using Utilities;
     using Windows;
 
+    [NodeForData(typeof(DialogueGTData))]
     public class GTDialogueNode : GTNode
     {
-        public override GTNodeData CreateNodeData()
+        public override void OnAwake()
         {
-            DialogueGTData newNodeData = new DialogueGTData();
             GTNodeConnection choiceData = new GTNodeConnection()
             {
                 data = "Next Node",
             };
-            newNodeData.connectedPorts.Add(choiceData);
-            newNodeData.nodeType = GTNodeType.SingleChoice;
-            return newNodeData;
+            nodeData.connectedPorts.Add(choiceData);
         }
 
         public override void OnDraw()

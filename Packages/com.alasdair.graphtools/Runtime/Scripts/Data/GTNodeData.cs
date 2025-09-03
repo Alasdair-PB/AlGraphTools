@@ -3,6 +3,8 @@ using GT.Enumerations;
 using PlasticPipe.PlasticProtocol.Messages;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace GT.Data
@@ -27,17 +29,15 @@ namespace GT.Data
     [Serializable]
     public class GTNodeData
     {
-        [field: SerializeField] public string id { get; set; } // To replace with nodeGuid
         [SerializeField] private string nodeGuid = System.Guid.NewGuid().ToString();
         public string Guid => nodeGuid;
         [field: SerializeField] public string name { get; set; } // To Remove
         [field: SerializeField] public List<GTNodeConnection> connectedPorts { get; set; }
         [SerializeField] private List<string> connectedGuids = new();
-        [field: SerializeField] public GTNodeType nodeType { get; set; } // To Remove
-        [field: SerializeField] public bool isStartingNode { get; set; } // To Remove
         [field: SerializeField] public string groupID { get; set; } // Investigate refactor to remove from this object
         [field: SerializeField] public Vector2 position { get; set; } // Investigate refactor to remove from this object
 
+        // Refactor to make non-vritual by iterating through fields
         public virtual List<SerializableNodeData> GetSerializedNodes()
         {
             List<SerializableNodeData> serializedNodes = new List<SerializableNodeData>();
@@ -46,25 +46,25 @@ namespace GT.Data
             return serializedNodes;
         }
 
-        public virtual GTNodeData OnCreateCopy()
-        {
-            GTNodeData newNode = new GTNodeData();
-            return newNode;
-        }
-
         public GTNodeData CreateNewCopy()
         {
-            GTNodeData newNode = OnCreateCopy();
+            GTNodeData newNode = (GTNodeData)Activator.CreateInstance(this.GetType());
+            var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            newNode.id = this.id;
-            newNode.name = this.name;
-            newNode.nodeType = this.nodeType;
-            newNode.groupID = this.groupID;
-            newNode.position = this.position;
-            newNode.connectedPorts = new List<GTNodeConnection>();
+            foreach (var prop in props)
+            {
+                if (!prop.CanRead || !prop.CanWrite) continue;
+                var value = prop.GetValue(this);
 
-            foreach (GTNodeConnection outChannelData in connectedPorts)
-                newNode.connectedPorts.Add(outChannelData.CreateNewCopy());
+                if (value is ICloneable cloneable)
+                    prop.SetValue(newNode, cloneable.Clone());
+                else if (value is List<GTNodeConnection> connections)
+                    prop.SetValue(newNode, connections.Select(c => c.CreateNewCopy()).ToList());
+                else if (value is GTNodeConnection conn)
+                    prop.SetValue(newNode, conn.CreateNewCopy());
+                else
+                    prop.SetValue(newNode, value);
+            }
             return newNode;
         }
 
@@ -103,11 +103,8 @@ namespace GT.Data
 
         public GTNodeData()
         {
-            id = "";
             name = "";
             connectedPorts = new List<GTNodeConnection>();
-            nodeType = GTNodeType.SingleChoice;
-            isStartingNode = false;
             groupID = "";
             position = new Vector2();
         }

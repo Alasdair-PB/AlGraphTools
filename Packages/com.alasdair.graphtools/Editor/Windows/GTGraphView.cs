@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -11,7 +12,29 @@ namespace GT.Windows
     using Elements;
     using Enumerations;
     using GT.Data;
+    using System.Linq;
     using Utilities;
+    public static class NodeTypeResolver
+    {
+        private static readonly Dictionary<Type, Type> dataToNodeMap = new();
+
+        static NodeTypeResolver()
+        {
+            foreach (Type type in AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(a => a.GetTypes())
+                .Where(t => typeof(GTNode).IsAssignableFrom(t) && !t.IsAbstract))
+            {
+                var attr = type.GetCustomAttributes(typeof(NodeForDataAttribute), false)
+                               .FirstOrDefault() as NodeForDataAttribute;
+                if (attr != null)
+                    dataToNodeMap[attr.DataType] = type;
+            }
+        }
+        public static Type GetNodeTypeForData(Type dataType)
+        {
+            return dataToNodeMap.TryGetValue(dataType, out var nodeType) ? nodeType : null;
+        }
+    }
 
     public class GTGraphView : GraphView
     {
@@ -92,12 +115,14 @@ namespace GT.Windows
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
 
-            this.AddManipulator(CreateNodeContextualMenu("Add Node (Single Choice)", GTNodeType.SingleChoice));
-            this.AddManipulator(CreateNodeContextualMenu("Add Node (Multiple Choice)", GTNodeType.MultipleChoice));
+            foreach(Type nodeType in editorWindow.GetCustomNodeTypes())
+                this.AddManipulator(CreateNodeContextualMenu(("Add Node" + nodeType.Name), nodeType));
+            //this.AddManipulator(CreateNodeContextualMenu("Add Node (Single Choice)", GTNodeType.SingleChoice));
+            //this.AddManipulator(CreateNodeContextualMenu("Add Node (Multiple Choice)", GTNodeType.MultipleChoice));
             this.AddManipulator(CreateGroupContextualMenu());
         }
 
-        private IManipulator CreateNodeContextualMenu(string actionTitle, GTNodeType myNodeType)
+        private IManipulator CreateNodeContextualMenu(string actionTitle, Type myNodeType)
         {
             ContextualMenuManipulator contextualMenuManipulator = new ContextualMenuManipulator(
                 menuEvent => menuEvent.menu.AppendAction(actionTitle, actionEvent => AddElement(CreateNode("NodeName", myNodeType, GetLocalMousePosition(actionEvent.eventInfo.localMousePosition))))
@@ -129,6 +154,18 @@ namespace GT.Windows
                 group.AddElement(node);
             }
             return group;
+        }
+
+        public GTNode CreateNode(string nodeName, Type myNodeType, Vector2 position, bool shouldDraw = true)
+        {
+            GTNode node = (GTNode) Activator.CreateInstance(myNodeType);
+            node.Initialize(nodeName, this, position);
+
+            if (shouldDraw)
+                node.Draw();
+
+            AddUngroupedNode(node);
+            return node;
         }
 
         public GTNode CreateNode(string nodeName, GTNodeType myNodeType, Vector2 position, bool shouldDraw = true)
@@ -454,7 +491,7 @@ namespace GT.Windows
             if (searchWindow == null)
                 searchWindow = ScriptableObject.CreateInstance<GTSearchWindow>();
 
-            searchWindow.Initialize(this);
+            searchWindow.Initialize(this, editorWindow);
             nodeCreationRequest = context => SearchWindow.Open(new SearchWindowContext(context.screenMousePosition), searchWindow);
         }
 

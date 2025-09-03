@@ -1,6 +1,7 @@
 using UnityEngine;
 using GT.Data;
 using System;
+using GT.Elements;
 
 
 [Serializable] // Would be serilizable node data?
@@ -14,5 +15,6 @@ public class DialogueTableGTData : GTNodeData
 public class DialogueGTData : GTNodeData
 {
     // In port
+    // This should be a connection not a node reference?
     public DialogueTableGTData dialogueTable { get; set; }
 }

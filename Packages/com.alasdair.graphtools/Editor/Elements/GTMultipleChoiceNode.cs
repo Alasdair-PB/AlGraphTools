@@ -4,24 +4,23 @@ using UnityEngine.UIElements;
 
 namespace GT.Elements
 {
-    using Data.Save;
     using Enumerations;
     using GT.Data;
+    using System;
     using Utilities;
-    using Windows;
 
+    [Serializable] public class MultipleChoiceData : GTNodeData { }
+
+    [NodeForData(typeof(MultipleChoiceData))]
     public class GTMultipleChoiceNode : GTNode
     {
-        public override GTNodeData CreateNodeData()
+        public override void OnAwake()
         {
-            GTNodeData newNodeData = new GTNodeData();
             GTNodeConnection choiceData = new GTNodeConnection()
             {
                 data = "Next Node",
             };
-            newNodeData.connectedPorts.Add(choiceData);
-            newNodeData.nodeType = GTNodeType.MultipleChoice;
-            return newNodeData;
+            nodeData.connectedPorts.Add(choiceData);
         }
 
         public override void OnDraw()

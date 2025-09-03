@@ -8,7 +8,7 @@ namespace GT.Data.Save
     {
         [field: SerializeField] public string FileName { get; set; }
         [field: SerializeField] public List<GTGroupSaveData> Groups { get; set; }
-        [field: SerializeField] public List<GTNodeData> Nodes { get; set; }
+        [field: SerializeReference] public List<GTNodeData> Nodes { get; set; }
         [field: SerializeField] public List<string> OldGroupNames { get; set; }
         [field: SerializeField] public List<string> OldUngroupedNodeNames { get; set; }
         [field: SerializeField] public SerializableDictionary<string, List<string>> OldGroupedNodeNames { get; set; }
@@ -16,6 +16,12 @@ namespace GT.Data.Save
         public virtual void CreateNodeList()
         {
             Nodes = new List<GTNodeData>();
+        }
+
+        public GTGraph()
+        {
+            Groups = new List<GTGroupSaveData>();
+            CreateNodeList();
         }
 
         public void Initialize(string fileName)

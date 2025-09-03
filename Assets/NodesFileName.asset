@@ -9,51 +9,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30c8472dead104d46bf163d6920ebc69, type: 3}
+  m_Script: {fileID: 11500000, guid: 08d7319802d9d614ebf802954ba1e3ab, type: 3}
   m_Name: NodesFileName
   m_EditorClassIdentifier: 
   <FileName>k__BackingField: NodesFileName
   <Groups>k__BackingField: []
   <Nodes>k__BackingField:
-  - <id>k__BackingField: c9e343e6-bb33-4ccd-a7a2-d0df49a7781c
-    nodeGuid: dfdd1c2b-37b9-4a19-b98b-e34d9078c068
-    <name>k__BackingField: NodeName
-    <connectedPorts>k__BackingField:
-    - <data>k__BackingField: Next Node
-      <nodeData>k__BackingField:
-        rid: 5101683410896945186
-    connectedGuids:
-    - 8001a3ad-cad9-4923-b9f6-b0f00ad59775
-    <nodeType>k__BackingField: 0
-    <isStartingNode>k__BackingField: 0
-    <groupID>k__BackingField: 
-    <position>k__BackingField: {x: 309, y: 210.5}
-  - <id>k__BackingField: 59a9f15c-f122-4764-875c-d0ebc285eddc
-    nodeGuid: 8001a3ad-cad9-4923-b9f6-b0f00ad59775
-    <name>k__BackingField: newName
-    <connectedPorts>k__BackingField:
-    - <data>k__BackingField: Next Node
-      <nodeData>k__BackingField:
-        rid: 5101683410896945187
-    connectedGuids:
-    - 
-    <nodeType>k__BackingField: 0
-    <isStartingNode>k__BackingField: 0
-    <groupID>k__BackingField: 
-    <position>k__BackingField: {x: 528.5, y: 361}
-  - <id>k__BackingField: dd050c13-a5bf-48ca-a0ee-fc5ced666612
-    nodeGuid: 9506fe4a-6867-489b-bcb5-2d25101ded27
-    <name>k__BackingField: happy
-    <connectedPorts>k__BackingField:
-    - <data>k__BackingField: Next Node
-      <nodeData>k__BackingField:
-        rid: 5101683410896945188
-    connectedGuids:
-    - 
-    <nodeType>k__BackingField: 0
-    <isStartingNode>k__BackingField: 0
-    <groupID>k__BackingField: 
-    <position>k__BackingField: {x: 598, y: 226}
+  - rid: 5101683455331139587
+  - rid: 5101683455331139588
+  - rid: 5101683455331139589
   <OldGroupNames>k__BackingField: []
   <OldUngroupedNodeNames>k__BackingField: []
   <OldGroupedNodeNames>k__BackingField:
@@ -61,12 +25,51 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 5101683410896945186
+    - rid: 5101683455331139587
+      type: {class: SingleChoiceData, ns: GT.Elements, asm: Alasdair.GraphTools.Editor}
+      data:
+        nodeGuid: 2eaf6a30-7f1e-4e21-ab25-8dedc5ac4921
+        <name>k__BackingField: a
+        <connectedPorts>k__BackingField:
+        - <data>k__BackingField: Next Node
+          <nodeData>k__BackingField:
+            rid: 5101683455331139590
+        connectedGuids:
+        - d1ed80a9-3098-4511-a90c-56415c787f53
+        <groupID>k__BackingField: 
+        <position>k__BackingField: {x: 194, y: 241.5}
+    - rid: 5101683455331139588
+      type: {class: SingleChoiceData, ns: GT.Elements, asm: Alasdair.GraphTools.Editor}
+      data:
+        nodeGuid: d1ed80a9-3098-4511-a90c-56415c787f53
+        <name>k__BackingField: b
+        <connectedPorts>k__BackingField:
+        - <data>k__BackingField: Next Node
+          <nodeData>k__BackingField:
+            rid: 5101683455331139591
+        connectedGuids:
+        - 
+        <groupID>k__BackingField: 
+        <position>k__BackingField: {x: 629, y: 303.5}
+    - rid: 5101683455331139589
+      type: {class: DialogueGTData, ns: , asm: Assembly-CSharp-Editor}
+      data:
+        nodeGuid: 710a2a38-d834-46ab-9d03-91b3cf4cba0c
+        <name>k__BackingField: DialogueNode
+        <connectedPorts>k__BackingField:
+        - <data>k__BackingField: Next Node
+          <nodeData>k__BackingField:
+            rid: 5101683455331139592
+        connectedGuids:
+        - 
+        <groupID>k__BackingField: 
+        <position>k__BackingField: {x: 609, y: 209.5}
+    - rid: 5101683455331139590
       type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
       data: 
-    - rid: 5101683410896945187
+    - rid: 5101683455331139591
       type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
       data: 
-    - rid: 5101683410896945188
+    - rid: 5101683455331139592
       type: {class: SerializableNodeData, ns: GT.Data, asm: Alasdair.GraphTools}
       data: 

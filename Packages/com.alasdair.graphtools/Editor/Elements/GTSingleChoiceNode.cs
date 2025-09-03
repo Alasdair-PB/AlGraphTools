@@ -6,21 +6,22 @@ namespace GT.Elements
     using Data.Save;
     using Enumerations;
     using GT.Data;
+    using PlasticGui.WorkspaceWindow.Items;
+    using System;
     using Utilities;
     using Windows;
+    [Serializable] public class SingleChoiceData : GTNodeData {}
 
+    [NodeForData(typeof(SingleChoiceData))]
     public class GTSingleChoiceNode : GTNode
     {
-        public override GTNodeData CreateNodeData()
+        public override void OnAwake()
         {
-            GTNodeData newNodeData = new GTNodeData();
             GTNodeConnection choiceData = new GTNodeConnection()
             {
                 data = "Next Node",
             };
-            newNodeData.connectedPorts.Add(choiceData);
-            newNodeData.nodeType = GTNodeType.SingleChoice;
-            return newNodeData;
+            nodeData.connectedPorts.Add(choiceData);
         }
 
         public override void OnDraw()

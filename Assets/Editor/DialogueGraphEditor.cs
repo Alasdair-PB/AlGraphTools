@@ -4,8 +4,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System;
+using UnityEngine.UIElements;
+using GT.Elements;
 
-[GTEditor(typeof(GTGraph))]
+
+[GTEditor(typeof(DialogueGraph))]
 public class DialogueGraphEditor : GTEditorWindow
 {
 
@@ -18,5 +22,23 @@ public class DialogueGraphEditor : GTEditorWindow
     protected override void Initialize()
     {
         base.Initialize();
+    }
+
+    protected override Type GetGraphType()
+    {
+        return typeof(DialogueGraph);
+    }
+    protected override string GetFileExtension()
+    {
+        return "asset";
+    }
+
+    public override List<Type> GetCustomNodeTypes()
+    {
+        List<Type> nodes = new List<Type>();
+        nodes.Add(typeof(GTSingleChoiceNode));
+        nodes.Add(typeof(GTMultipleChoiceNode));
+        nodes.Add(typeof(GTDialogueNode));
+        return nodes;
     }
 }

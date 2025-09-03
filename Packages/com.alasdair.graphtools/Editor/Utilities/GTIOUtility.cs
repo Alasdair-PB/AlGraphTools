@@ -11,6 +11,8 @@ namespace GT.Utilities
     using Data;
     using Data.Save;
     using Elements;
+    using GluonGui.WorkspaceWindow.Views.WorkspaceExplorer;
+    using System.IO;
     using System.Reflection;
     using Windows;
 
@@ -27,6 +29,14 @@ namespace GT.Utilities
         private Dictionary<GTNodeData, GTNode> loadedNodes;
         private Dictionary<GTNodeData, GTNodeData> graphToObjectMap;
 
+        private Type graphType;
+        private string assetExtension;
+
+        public GTIOUtility(Type in_graphType, string in_assetExtension)
+        {
+            graphType = in_graphType;
+            assetExtension = in_assetExtension;
+        }
 
         public void Initialize(GTGraphView gtGraphView, string filePath, string graphName)
         {
@@ -50,7 +60,15 @@ namespace GT.Utilities
 
         GTNode CreateCopyFromObject(GTNodeData nodeData)
         {
-            GTNode newNode = graphView.CreateNode(nodeData.name, nodeData.nodeType, nodeData.position, false);
+            Type nodeType = NodeTypeResolver.GetNodeTypeForData(nodeData.GetType());
+            Debug.Log(nodeData.GetType().Name);
+            if (nodeType == null)
+            {
+                Debug.Log("ah fuck");
+                return null;
+            }
+            GTNode newNode = (GTNode)graphView.CreateNode(nodeData.name, nodeType, nodeData.position, false);
+            /*GTNode newNode = graphView.CreateNode(nodeData.name, nodeData.GetType(), nodeData.position, false);*/
             newNode.nodeData = nodeData.CreateNewCopy();
             newNode.Draw();
 
@@ -64,8 +82,7 @@ namespace GT.Utilities
         public void Save()
         {
             GetElementsFromGraphView();
-
-            GTGraph graphData = CreateAsset<GTGraph>(graphFilePath, $"{graphFileName}");
+            GTGraph graphData = CreateAsset(graphFilePath, $"{graphFileName}");
             graphData.Initialize(graphFileName);
 
             SaveGroups(graphData);
@@ -125,7 +142,6 @@ namespace GT.Utilities
             SaveNodeReferences(graphData);
         }
 
-
         private void SaveNodeToGraph(GTNode in_node, GTGraph graphData)
         {
             GTNodeData nodeData = CreateCopyFromGraph(in_node);
@@ -134,15 +150,22 @@ namespace GT.Utilities
             graphData.Nodes.Add(nodeData);
         }
 
+        public string GetFullFilePath(string graphFilePath, string graphFileName)
+        {
+            return $"{graphFilePath}/{graphFileName}.{assetExtension}";
+        }
+
         public bool Load()
         {
-            GTGraph graphData = LoadAsset<GTGraph>(graphFilePath, graphFileName);
+            string fullPath = GetFullFilePath(graphFilePath, graphFileName);
+            GTGraph graphData = (GTGraph)AssetDatabase.LoadAssetAtPath(fullPath, graphType);
+
             if (graphData == null)
             {
                 EditorUtility.DisplayDialog(
                     "Could not find the file!",
                     "The file at the following path could not be found:\n\n" +
-                    $"\"{graphFilePath}{graphFileName}\".\n\n" +
+                    $"\"{fullPath}\".\n\n" +
                     "Make sure you chose the right file and it's placed at the folder path mentioned above.",
                     "Thanks!"
                 );
@@ -179,7 +202,6 @@ namespace GT.Utilities
                 }
             }
         }
-
         private void LoadNodes(List<GTNodeData> in_node)
         {
             foreach (GTNodeData nodeData in in_node)
@@ -194,7 +216,6 @@ namespace GT.Utilities
                 group.AddElement(newNode);
             }
         }
-
         private void LoadNodesConnections()
         {
             foreach (KeyValuePair<GTNodeData, GTNode> loadedNode in loadedNodes)
@@ -252,13 +273,26 @@ namespace GT.Utilities
             FileUtil.DeleteFileOrDirectory($"{path}/");
         }
 
-        public static T CreateAsset<T>(string path, string assetName) where T : ScriptableObject
+        public GTGraph CreateAsset(string path, string assetName)
         {
-            string fullPath = $"{path}/{assetName}.asset";
-            T asset = LoadAsset<T>(path, assetName);
+            string fullPath = GetFullFilePath(graphFilePath, graphFileName);
+            GTGraph asset = (GTGraph)AssetDatabase.LoadAssetAtPath(fullPath, graphType);
 
             if (asset == null)
             {
+                asset = (GTGraph) ScriptableObject.CreateInstance(graphType);
+                AssetDatabase.CreateAsset(asset, fullPath);
+            }
+            return asset;
+        }
+
+        /*public static T CreateAsset<T>(string path, string assetName) where T : ScriptableObject
+        {
+            T asset = LoadAsset<T>(path, assetName);
+
+            if (asset == null)
+            {            
+                string fullPath = $"{path}/{assetName}.asset";
                 asset = ScriptableObject.CreateInstance<T>();
                 AssetDatabase.CreateAsset(asset, fullPath);
             }
@@ -269,7 +303,7 @@ namespace GT.Utilities
         {
             string fullPath = $"{path}/{assetName}.asset";
             return AssetDatabase.LoadAssetAtPath<T>(fullPath);
-        }
+        }*/
 
         public static void SaveAsset(UnityEngine.Object asset)
         {

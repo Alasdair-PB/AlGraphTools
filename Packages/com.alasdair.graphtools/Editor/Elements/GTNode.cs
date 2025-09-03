@@ -7,22 +7,27 @@ using UnityEngine.UIElements;
 
 namespace GT.Elements
 {
-    using Codice.CM.Common.Tree;
     using Data.Save;
     using Enumerations;
     using GT.Data;
-    using PlasticGui.WorkspaceWindow.Items;
     using Utilities;
     using Windows;
 
-    public class GTNode : Node
+    public abstract class GTNode : Node
     {
         public GTNodeData nodeData {get;set;}
         public GTGroup group { get; set; }
         protected GTGraphView graphView;
         private Color defaultBackgroundColor;
 
-        protected string CreateNewGuid()
+    protected GTNode()
+    {
+        var hasAttr = Attribute.IsDefined(this.GetType(), typeof(NodeForDataAttribute));
+        if (!hasAttr)
+            throw new InvalidOperationException($"{GetType().Name} must define [NodeForData] attribute.");
+    }
+    
+    protected string CreateNewGuid()
         {
             return Guid.NewGuid().ToString();
         }
@@ -56,12 +61,30 @@ namespace GT.Elements
             channelData.nodeData.NodePtr = null;
         }
 
-        public virtual GTNodeData CreateNodeData()
+        public GTNodeData CreateNodeData()
         {
-            GTNodeData newNodeData = new GTNodeData();
+            var attr = (NodeForDataAttribute)Attribute.GetCustomAttribute(
+            this.GetType(),
+            typeof(NodeForDataAttribute));
+
+            if (attr == null)
+            {
+                throw new InvalidOperationException(
+                    $"{GetType().Name} is missing NodeForDataAttribute"
+                );
+            }
+            GTNodeData newNodeData = (GTNodeData)Activator.CreateInstance(attr.DataType);
+
+            GTNodeConnection choiceData = new GTNodeConnection()
+            {
+                data = "Next Node",
+            };
             return newNodeData;
         }
-        public virtual void OnDraw() { }
+
+        public virtual void OnAwake() {}
+
+        public virtual void OnDraw() {}
 
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
@@ -73,7 +96,6 @@ namespace GT.Elements
         public void InitializeGenerics(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {
             nodeData = CreateNodeData();
-            nodeData.id = CreateNewGuid();
             nodeData.name = in_NodeName;
 
             SetPosition(new Rect(position, Vector2.zero));
@@ -82,6 +104,7 @@ namespace GT.Elements
 
             mainContainer.AddToClassList("gt-node__main-container");
             extensionContainer.AddToClassList("gt-node__extension-container");
+            OnAwake();
         }
 
         public void Initialize(string in_NodeName, GTGraphView gtGraphView, Vector2 position)

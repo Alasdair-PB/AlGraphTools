@@ -1,6 +1,8 @@
 using System.IO;
 using System;
+using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
@@ -45,26 +47,20 @@ namespace GT.Windows
             window.Load(assetPath);
         }
 
-        public static void Open(string assetPath)
+        public void Load(string assetPath) 
         {
-            var window = GetWindow<GTEditorWindow>("Node Graph");
-            window.Initialize();
-            window.Load(assetPath);
-        }
-
-        public void Load(string assetPath)
-        {
-            string directoryPath = Path.GetDirectoryName(assetPath);
+            string directoryPath = Path.GetDirectoryName(assetPath); 
             string fileName = Path.GetFileNameWithoutExtension(assetPath);
-            loadManager.Initialize(graphView, directoryPath, Path.GetFileNameWithoutExtension(assetPath));
-
-            if (loadManager.Load())
-            {
-                UpdateFileName(fileName);
-                UpdateFilePath(directoryPath);
+            loadManager.Initialize(graphView, directoryPath, Path.GetFileNameWithoutExtension(assetPath)); 
+            
+            if (loadManager.Load()) { 
+                UpdateFileName(fileName); 
+                UpdateFilePath(directoryPath); 
             }
-                
         }
+        public abstract List<Type> GetCustomNodeTypes();
+        protected abstract Type GetGraphType(); //return typeof(GTGraph);
+        protected abstract string GetFileExtension();
 
         protected virtual void Initialize()
         {
@@ -75,7 +71,7 @@ namespace GT.Windows
             AddStyles();
             UpdateFileName(defaultFileName);
             UpdateFilePath(defaultFilePath);
-            loadManager = new GTIOUtility();
+            loadManager = new GTIOUtility(GetGraphType(), GetFileExtension());
             isInitialized = true;
         }
 
@@ -152,8 +148,19 @@ namespace GT.Windows
             if (string.IsNullOrEmpty(filePath))
                 return;
 
-            string directoryPath = Path.GetDirectoryName(filePath);
-            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            string projectAssetsPath = Application.dataPath.Replace("\\", "/");
+            filePath = filePath.Replace("\\", "/");
+
+            if (!filePath.StartsWith(projectAssetsPath))
+            {
+                Debug.LogError("File not inside Assets folder.");
+                return;
+            }
+
+            string relativePath = "Assets" + filePath.Substring(projectAssetsPath.Length);
+            string directoryPath = Path.GetDirectoryName(relativePath);
+            string fileName = Path.GetFileNameWithoutExtension(relativePath);
+
             Clear();
             loadManager.Initialize(graphView, directoryPath, fileName);
 
