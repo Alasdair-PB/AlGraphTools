@@ -28,27 +28,6 @@ namespace GT.Data
         }
     }
 
-    [Serializable]
-    public class SerializableNode 
-    {
-        public SerializableNode() { NodePtr = null; }
-
-        [NonSerialized] public GTNodeData NodePtr = null;
-        public GTNodeData NodeData => NodePtr;
-
-        public IEnumerable<(Func<GTNodeData> Getter, Action<GTNodeData> Setter)> GetAllReferences()
-        {
-            yield return (() => NodePtr, value => NodePtr = value);
-            //yield return (() => anotherRef, value => anotherRef = value);
-        }
-
-        public SerializableNodeData CreateNewCopy()
-        {
-            SerializableNodeData copy = new SerializableNodeData();
-            copy.NodePtr = this.NodePtr;
-            return copy;
-        }
-    }
 
     [Serializable]
     public abstract class GTNodeData

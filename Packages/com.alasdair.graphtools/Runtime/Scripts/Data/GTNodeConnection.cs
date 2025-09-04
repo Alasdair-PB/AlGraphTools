@@ -6,6 +6,8 @@ using System.Reflection;
 
 namespace GT.Data
 {
+    public interface INodeData { }
+
     [Serializable]
     public class GTNodeConnection 
     {
