@@ -7,28 +7,16 @@ using UnityEngine.UIElements;
 
 namespace GT.Elements
 {
-    using Data.Save;
-    using Enumerations;
-    using GT.Data;
     using Utilities;
     using Windows;
 
     [NodeForData(typeof(DialogueTableGTData))]
-    public class GTDialogueTable : GTNode
+    public class GTDialogueTable : GTNode, IStringResult
     {
         // Refactor to reduce knowledge barrier and implementation steps for users
         public override bool OnEdgeConnected(Edge edge)
         {
-            if (!(edge.output.userData is TableConnection)) return false;
-            if (!(nodeData is DialogueTableGTData)) return false;
-            DialogueTableGTData nodeDData = (DialogueTableGTData) nodeData;
-
-            TableConnection tableConnection = (TableConnection) edge.output.userData;
-            if (tableConnection == null) return false;
-            int inputIndex = edge.input.parent.IndexOf(edge.input);
-            int outputIndex = edge.output.parent.IndexOf(edge.output);
-
-            tableConnection.nodeData.NodePtr = nodeData;
+            if (CanEdgeConnect<GTStringConnection>(edge)) return true;
             return true;
         }
 
@@ -38,39 +26,43 @@ namespace GT.Elements
 
         public override void OnDraw()
         {
+
+        }
+
+        public string GetStringResult()
+        {
+            if (!(nodeData is DialogueTableGTData)) return "";
+            DialogueTableGTData nodeDData = (DialogueTableGTData)nodeData;
+
+            return nodeDData.dataTest;
         }
     }
 
-    [NodeForData(typeof(DialogueGTData))]
+    [NodeForData(typeof(DialogueAct))]
     public class GTDialogueNode : GTNode
     {
+        public override bool OnEdgeConnected(Edge edge)
+        {
+            if (CanEdgeConnect<GTStringConnection>(edge)) return true;
+            return true;
+        }
 
         public override void OnAwake()
         {
-            if (!(nodeData is DialogueGTData)) return;
-
-            TableConnection choiceData = new TableConnection();
-            nodeData.connectedPorts.Add(choiceData);
-
-            // Investigate serperating connections from single list for fields. 
-            //((DialogueGTData)nodeData).dialogueTable = new TableConnection();
+            if (!(nodeData is DialogueAct)) return;
+            DialogueAct nodeDData = (DialogueAct)nodeData;
+            nodeDData.stringPort = null;
         }
 
         public override void OnDraw()
         {
-            if (!(nodeData is DialogueGTData)) return;
-            DialogueGTData nodeDData = (DialogueGTData)nodeData;
+            if (!(nodeData is DialogueAct)) return;
+            DialogueAct nodeDData = (DialogueAct)nodeData;
 
-            /*Port outPort = this.CreatePort("Graph");
-            outPort.userData = nodeDData.dialogueTable;
-            outputContainer.Add(outPort);*/
+            Port outPort = this.CreatePort(nodeDData.stringPort == null ? "Out port" : nodeDData.stringPort.GetStringResult());//(string) nodeDData.choiceData.GetValue()
+            outPort.userData = nodeDData.stringPort;
+            outputContainer.Add(outPort);
 
-            foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
-            {
-                Port outPort = this.CreatePort("Graph");
-                outPort.userData = outChannel;
-                outputContainer.Add(outPort);
-            }
             RefreshExpandedState();
 
             /*VisualElement customDataContainer = new VisualElement();

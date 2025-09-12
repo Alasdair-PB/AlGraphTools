@@ -7,65 +7,49 @@ using UnityEngine;
 namespace GT.Data
 {
     [Serializable]
-    public class SerializableNodeData
-    {
-        public SerializableNodeData () { NodePtr = null;}
-
-        [NonSerialized] public GTNodeData NodePtr = null;
-        public GTNodeData NodeData => NodePtr;
-
-        public IEnumerable<(Func<GTNodeData> Getter, Action<GTNodeData> Setter)> GetAllReferences()
-        {
-            yield return (() => NodePtr, value => NodePtr = value);
-            //yield return (() => anotherRef, value => anotherRef = value);
-        }
-
-        public SerializableNodeData CreateNewCopy()
-        {
-            SerializableNodeData copy = new SerializableNodeData();
-            copy.NodePtr = this.NodePtr;
-            return copy; 
-        }
-    }
-
-
-    [Serializable]
     public abstract class GTNodeData
     {
         [SerializeField] private string nodeGuid = System.Guid.NewGuid().ToString();
         public string Guid => nodeGuid;
-        [field: SerializeField] public string name { get; set; } // To Remove
-        [field: SerializeReference] public List<GTNodeConnection> connectedPorts { get; set; }
+
         [SerializeField] private List<string> connectedGuids = new();
-        [field: SerializeField] public string groupID { get; set; } // Investigate refactor to remove from this object
-        [field: SerializeField] public Vector2 position { get; set; } // Investigate refactor to remove from this object
+        [field: SerializeField] public string Name { get; set; } 
+        [field: SerializeField] public string GroupID { get; set; } = "";
+        [field: SerializeField] public Vector2 Position { get; set; } = Vector2.zero;
 
-        // Refactor to make non-vritual by iterating through fields
-        public virtual List<SerializableNodeData> GetSerializedNodes()
+        public IEnumerable<(Func<GTNodeData> Getter, Action<GTNodeData> Setter)> GetAllReferences()
         {
-            List<SerializableNodeData> serializedNodes = new List<SerializableNodeData>();
-            foreach (var node in connectedPorts)
-                serializedNodes.Add(node?.nodeData);
-            return serializedNodes;
-
-
             var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
             foreach (var prop in props)
             {
                 if (!prop.CanRead || !prop.CanWrite) continue;
                 var value = prop.GetValue(this);
 
-                if (value is SerializableNodeData)
-                    serializedNodes.Add(((SerializableNodeData)value));
-                else if (value is GTNodeConnection)
-                    serializedNodes.Add((((GTNodeConnection)value)?.nodeData));
+                if (value is GTNodeConnection)
+                {
+                    foreach (var accessor in ((GTNodeConnection)value).GetAllReferences())
+                        yield return accessor;
+                }
+            }
+
+            var fields = this.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            foreach (var field in fields)
+            {
+                var value = field.GetValue(this);
+
+                if (value is GTNodeConnection conn)
+                {
+                    foreach (var accessor in ((GTNodeConnection)value).GetAllReferences())
+                        yield return accessor;
+                }
             }
         }
 
         public GTNodeData CreateNewCopy()
         {
-            GTNodeData newNode = (GTNodeData)Activator.CreateInstance(this.GetType());
+            GTNodeData newNode = (GTNodeData) Activator.CreateInstance(this.GetType());
             var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var fields = this.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
             foreach (var prop in props)
             {
@@ -81,58 +65,92 @@ namespace GT.Data
                 else
                     prop.SetValue(newNode, value);
             }
+
+            foreach (var field in fields)
+            {
+                var value = field.GetValue(this);
+
+                if (value is GTNodeConnection conn)
+                    field.SetValue(newNode, conn.CreateNewCopy());
+                else
+                    field.SetValue(newNode, value);
+            }
             return newNode;
         }
 
+
+        /*
         public void OnBeforeSerialize(Dictionary<GTNodeData, string> nodeToGuid)
         {
-            List<SerializableNodeData> serializedNodes = GetSerializedNodes();
             connectedGuids.Clear();
+            GTNodeData newNode = (GTNodeData)Activator.CreateInstance(this.GetType());
+            var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var fields = this.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            foreach (var node in serializedNodes)
+            foreach (var prop in props)
             {
-                if (node != null && node.NodePtr != null && nodeToGuid.TryGetValue(node.NodePtr, out var nodeId))
-                    connectedGuids.Add(nodeId);
-                else if (node == null || node.NodePtr == null)
-                    connectedGuids.Add("");
+                if (!prop.CanRead || !prop.CanWrite) continue;
+                var value = prop.GetValue(this);
+
+                if (value is GTNodeConnection)
+                {
+                    foreach (var (getter, _) in ((GTNodeConnection)value).GetAllReferences())
+                    {
+                       // var node = getter();
+                        //connectedGuids.Add(node != null && nodeToGuid.TryGetValue(node, out var id) ? id : "");
+                    }
+                }
+            }
+            foreach (var field in fields)
+            {
+                var value = field.GetValue(this);
+
+                if (value is GTNodeConnection conn)
+                {
+                    foreach (var (getter, _) in ((GTNodeConnection)value).GetAllReferences())
+                    {
+                        //var node = getter();
+                        //connectedGuids.Add(node != null && nodeToGuid.TryGetValue(node, out var id) ? id : "");
+                    }
+                }
             }
         }
 
         public void OnAfterDeserialize(Dictionary<string, GTNodeData> guidToNode)
         {
-            List<SerializableNodeData> serializedNodes = GetSerializedNodes();
-            int serializedNodeCount = serializedNodes.Count;
+            int i = 0;
+            //connectedGuids = new List<string>();
+            var props = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            var fields = this.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
-            for(int i = 0; i < serializedNodeCount; i++)
+            foreach (var prop in props)
             {
-                if (connectedGuids[i] != "")
+                if (!prop.CanRead || !prop.CanWrite) continue;
+                var value = prop.GetValue(this);
+
+                if (value is GTNodeConnection)
                 {
-                    if (guidToNode.TryGetValue(connectedGuids[i], out var target))
-                        serializedNodes[i].NodePtr = target;
-                }
-                else
-                {   if (serializedNodes[i] == null)
-                        serializedNodes[i] = new();
+                    foreach (var (_, setter) in ((GTNodeConnection)value).GetAllReferences())
+                    {
+                        //var guid = connectedGuids[i++];
+                        //setter(string.IsNullOrEmpty(guid) ? null : guidToNode[guid]);
+                    }
                 }
             }
-        }
 
-        public GTNodeData()
-        {
-            name = "";
-            connectedPorts = new List<GTNodeConnection>();
-            groupID = "";
-            position = new Vector2();
-        }
-
-        public IEnumerable<(Func<GTNodeData> Getter, Action<GTNodeData> Setter)> GetAllReferences()
-        {
-            List<SerializableNodeData> allRefs = GetSerializedNodes();
-            foreach (var node in allRefs)
+            foreach (var field in fields)
             {
-                foreach (var accessor in node.GetAllReferences())
-                    yield return accessor;
+                var value = field.GetValue(this);
+
+                if (value is GTNodeConnection conn)
+                {
+                    foreach (var (_, setter) in ((GTNodeConnection)value).GetAllReferences())
+                    {
+                        //var guid = connectedGuids[i++];
+                        //setter(string.IsNullOrEmpty(guid) ? null : guidToNode[guid]);
+                    }
+                }
             }
-        }
+        }*/
     }
 }

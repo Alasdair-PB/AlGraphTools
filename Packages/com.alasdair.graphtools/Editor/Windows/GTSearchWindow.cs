@@ -6,8 +6,6 @@ using System;
 namespace GT.Windows
 {
     using Elements;
-    using Enumerations;
-
     public class GTSearchWindow : ScriptableObject, ISearchWindowProvider
     {
         private GTEditorWindow editorWindow;

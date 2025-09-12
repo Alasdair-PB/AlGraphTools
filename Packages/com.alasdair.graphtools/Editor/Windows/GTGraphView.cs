@@ -325,7 +325,7 @@ namespace GT.Windows
 
         public void AddUngroupedNode(GTNode node)
         {
-            string nodeName = node.nodeData.name.ToLower();
+            string nodeName = node.nodeData.Name.ToLower();
 
             if (!ungroupedNodes.ContainsKey(nodeName))
             {
@@ -349,7 +349,7 @@ namespace GT.Windows
 
         public void RemoveUngroupedNode(GTNode node)
         {
-            string nodeName = node.nodeData.name.ToLower();
+            string nodeName = node.nodeData.Name.ToLower();
             List<GTNode> ungroupedNodesList = ungroupedNodes[nodeName].Nodes;
             ungroupedNodesList.Remove(node);
             node.ResetStyle();
@@ -410,7 +410,7 @@ namespace GT.Windows
 
         public void AddGroupedNode(GTNode node, GTGroup group)
         {
-            string nodeName = node.nodeData.name.ToLower();
+            string nodeName = node.nodeData.Name.ToLower();
             node.group = group;
 
             if (!groupedNodes.ContainsKey(group))
@@ -438,7 +438,7 @@ namespace GT.Windows
 
         public void RemoveGroupedNode(GTNode node, GTGroup group)
         {
-            string nodeName = node.nodeData.name.ToLower();
+            string nodeName = node.nodeData.Name.ToLower();
             node.group = null;
             List<GTNode> groupedNodesList = groupedNodes[group][nodeName].Nodes;
 

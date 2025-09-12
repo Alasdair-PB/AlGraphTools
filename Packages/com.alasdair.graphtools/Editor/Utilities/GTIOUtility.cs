@@ -47,6 +47,7 @@ namespace GT.Utilities
             loadedNodes = new Dictionary<GTNodeData, GTNode>();
             graphToObjectMap = new Dictionary<GTNodeData, GTNodeData>();
         }
+
         GTNodeData CreateCopyFromGraph(GTNode in_node)
         {
             GTNodeData nodeData = in_node.nodeData.CreateNewCopy();
@@ -59,7 +60,7 @@ namespace GT.Utilities
             Type nodeType = NodeTypeResolver.GetNodeTypeForData(nodeData.GetType());
             Debug.Log(nodeData.GetType().Name);
             if (nodeType == null) return null;
-            GTNode newNode = (GTNode)graphView.CreateNode(nodeData.name, nodeType, nodeData.position, false);
+            GTNode newNode = (GTNode)graphView.CreateNode(nodeData.Name, nodeType, nodeData.Position, false);
             newNode.nodeData = nodeData.CreateNewCopy();
             newNode.Draw();
 
@@ -125,10 +126,10 @@ namespace GT.Utilities
                 SaveNodeToGraph(node, graphData);
                 if (node.group != null)
                 {
-                    groupedNodeNames.AddItem(node.group.title, node.nodeData.name);
+                    groupedNodeNames.AddItem(node.group.title, node.nodeData.Name);
                     continue;
                 }
-                ungroupedNodeNames.Add(node.nodeData.name);
+                ungroupedNodeNames.Add(node.nodeData.Name);
             }
             SaveNodeReferences(graphData);
         }
@@ -136,8 +137,8 @@ namespace GT.Utilities
         private void SaveNodeToGraph(GTNode in_node, GTGraph graphData)
         {
             GTNodeData nodeData = CreateCopyFromGraph(in_node);
-            nodeData.groupID = in_node.group?.id;
-            nodeData.position = in_node.GetPosition().position;
+            nodeData.GroupID = in_node.group?.id;
+            nodeData.Position = in_node.GetPosition().position;
             graphData.Nodes.Add(nodeData);
         }
 
@@ -198,10 +199,10 @@ namespace GT.Utilities
             {
                 GTNode newNode = CreateCopyFromObject(nodeData);
 
-                if (string.IsNullOrEmpty(nodeData.groupID))
+                if (string.IsNullOrEmpty(nodeData.GroupID))
                     continue;
 
-                GTGroup group = loadedGroups[nodeData.groupID];
+                GTGroup group = loadedGroups[nodeData.GroupID];
                 newNode.group = group;
                 group.AddElement(newNode);
             }

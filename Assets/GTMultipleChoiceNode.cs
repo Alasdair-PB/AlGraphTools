@@ -6,72 +6,81 @@ namespace GT.Elements
 {
     using GT.Data;
     using System;
-    using Utilities;
 
-    [Serializable] public class MultipleChoiceData : GTNodeData { }
+    [Serializable] public class MultipleChoiceData : GTNodeData {
+        GTPortConnection<string> choiceData;
+        public string data;
+    }
 
     [NodeForData(typeof(MultipleChoiceData))]
     public class GTMultipleChoiceNode : GTNode
     {
+        public override bool OnEdgeConnected(Edge edge)
+        {
+            if (CanEdgeConnect<GTPortConnection<string>, string>(edge, ()=> OutString())) return true;
+            return true;
+        }
+
+        public string OutString()
+        {
+            return ((MultipleChoiceData)nodeData).data;
+        }
+
         public override void OnAwake()
         {
-            GTNodeConnection choiceData = new StringDataConnection()
-            {
-                data = "Next Node",
-            };
-            nodeData.connectedPorts.Add(choiceData);
+            GTPortConnection<string> choiceData = new GTPortConnection<string>(() => "");
+            //nodeData.choiceData = choiceData;
         }
 
         public override void OnDraw()
         {
             DrawAddOutChannel();
-            foreach (GTNodeConnection outChannel in nodeData.connectedPorts)
+            /*foreach (GTNodeConnection outChannel in nodeData.ConnectedPorts)
             {
                 Port outPort = CreateChoicePort(outChannel);
                 outputContainer.Add(outPort);
-            }
+            }*/
             RefreshExpandedState();
         }
 
         public void DrawAddOutChannel()
         {
-            Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
+            /*Button addChoiceButton = GTElementUtility.CreateButton("Add Choice", () =>
             {
-                StringDataConnection choiceData = new StringDataConnection();
-                choiceData.data = "Next Node";
-                nodeData.connectedPorts.Add(choiceData);
+                GTPortConnection<string> choiceData = new GTPortConnection<string>(()=>"Next node");
+                nodeData.ConnectedPorts.Add(choiceData);
                 Port choicePort = CreateChoicePort(choiceData);
                 outputContainer.Add(choicePort);
             });
             addChoiceButton.AddToClassList("gt-node__button");
-            mainContainer.Insert(1, addChoiceButton);
+            mainContainer.Insert(1, addChoiceButton);*/
         }
 
-        private Port CreateChoicePort(object userData)
+       /* private Port CreateChoicePort(object userData)
         {
             Port choicePort = this.CreatePort();
-            if (!(userData is StringDataConnection)) return choicePort;
+            if (!(userData is GTPortConnection<string>)) return choicePort;
 
             choicePort.userData = userData;
-            StringDataConnection choiceData = (StringDataConnection) userData;
+            GTPortConnection<string> choiceData = (GTPortConnection<string>) userData;
 
             Button deleteChoiceButton = GTElementUtility.CreateButton("X", () =>
             {
-                if (nodeData.connectedPorts.Count == 1)
+                if (nodeData.ConnectedPorts.Count == 1)
                     return;
 
                 if (choicePort.connected)
                     graphView.DeleteElements(choicePort.connections);
 
-                nodeData.connectedPorts.Remove(choiceData);
+                nodeData.ConnectedPorts.Remove(choiceData);
                 graphView.RemoveElement(choicePort);
             });
 
             deleteChoiceButton.AddToClassList("gt-node__button");
 
-            TextField choiceTextField = GTElementUtility.CreateTextField(choiceData.data, null, callback =>
+            TextField choiceTextField = GTElementUtility.CreateTextField(((string)choiceData.GetValue()), null, callback =>
             {
-                choiceData.data = callback.newValue;
+                ((MultipleChoiceData)nodeData).data = callback.newValue;
             });
 
             choiceTextField.AddClasses(
@@ -84,6 +93,6 @@ namespace GT.Elements
             choicePort.Add(deleteChoiceButton);
 
             return choicePort;
-        }
+        }*/
     }
 }

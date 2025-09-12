@@ -59,7 +59,7 @@ namespace GT.Windows
             }
         }
         public abstract List<Type> GetCustomNodeTypes();
-        protected abstract Type GetGraphType(); //return typeof(GTGraph);
+        protected abstract Type GetGraphType();
         protected abstract string GetFileExtension();
 
         protected virtual void Initialize()

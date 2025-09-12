@@ -7,8 +7,6 @@ using UnityEngine.UIElements;
 
 namespace GT.Elements
 {
-    using Data.Save;
-    using Enumerations;
     using GT.Data;
     using Utilities;
     using Windows;
@@ -27,11 +25,45 @@ namespace GT.Elements
                 throw new InvalidOperationException($"{GetType().Name} must define [NodeForData] attribute.");
         }
 
+        public bool CanEdgeConnectAtPort<T, A>(Edge edge, int unlockedPort, Func<A> getter)
+            where T : GTPortConnection<A>
+        {
+            if (!(edge.output.userData is T connection)) return false;
+
+            int inputIndex = edge.input.parent.IndexOf(edge.input);
+            if (unlockedPort != inputIndex) return false;
+
+            connection.SetGetter(getter);
+            connection.SetNodePtr(nodeData);
+            return true;
+        }
+
+        public bool CanEdgeConnect<T>(Edge edge)
+        {
+            if (!(edge.output.userData is T)) return false;
+            GTNodeConnection connection = (GTNodeConnection) edge.output.userData;
+            if (connection == null) return false;
+            connection.SetNodePtr(nodeData);
+            return true;
+        }
+
+        public bool CanEdgeConnect<T, A>(Edge edge, Func<A> getter)
+            where T : GTPortConnection<A>
+        {
+            if (!(edge.output.userData is T)) return false;
+            T connection = (T)edge.output.userData;
+            if (connection == null) return false;
+
+            connection.SetGetter(getter);
+            connection.SetNodePtr(nodeData);
+            return true;
+        }
+
         // Returns a pointer to node data from the port's userData if possible
         public GTNodeData GetNodeConnection(Port outPort)
         {
             GTNodeConnection choiceData = (GTNodeConnection) outPort.userData;
-            return choiceData == null ? null : choiceData.nodeData.NodePtr;
+            return choiceData == null ? null : choiceData.GetNodeData();
         }
 
         // Removes reference to this node from an out channel if valid.
@@ -39,20 +71,11 @@ namespace GT.Elements
         public virtual void OnEdgeCleared(Edge edge)
         {
             GTNodeConnection channelData = (GTNodeConnection)edge.output.userData;
-            channelData.nodeData = new();
+            channelData.ClearNodeReferences();
         }
 
         // Assigns this node data to the out channel if valid. Otherwise return false. 
-        public virtual bool OnEdgeConnected(Edge edge)
-        {
-            if (!(edge.output.userData is GTNodeConnection))
-                return false;
-
-            GTNodeConnection choiceData = (GTNodeConnection) edge.output.userData;
-            if (choiceData == null) return false;
-            choiceData.nodeData.NodePtr = nodeData;
-            return true;
-        }
+        public abstract bool OnEdgeConnected(Edge edge);
 
         public GTNodeData CreateNodeData()
         {
@@ -84,7 +107,7 @@ namespace GT.Elements
         public void InitializeGenerics(string in_NodeName, GTGraphView gtGraphView, Vector2 position)
         {
             nodeData = CreateNodeData();
-            nodeData.name = in_NodeName;
+            nodeData.Name = in_NodeName;
 
             SetPosition(new Rect(position, Vector2.zero));
             graphView = gtGraphView;
@@ -102,7 +125,7 @@ namespace GT.Elements
 
         private void DrawTextField()
         {
-            string name = nodeData.name;
+            string name = nodeData.Name;
             TextField myNodeNameTextField = GTElementUtility.CreateTextField(name, null, callback =>
             {
                 TextField target = (TextField)callback.target;
@@ -122,14 +145,14 @@ namespace GT.Elements
                 if (group == null)
                 {
                     graphView.RemoveUngroupedNode(this);
-                    nodeData.name = target.value;
+                    nodeData.Name = target.value;
                     graphView.AddUngroupedNode(this);
                     return;
                 }
 
                 GTGroup currentGroup = group;
                 graphView.RemoveGroupedNode(this, group);
-                nodeData.name = target.value;
+                nodeData.Name = target.value;
                 graphView.AddGroupedNode(this, currentGroup);
             });
 

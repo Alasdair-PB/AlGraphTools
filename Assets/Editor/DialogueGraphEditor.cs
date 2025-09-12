@@ -7,6 +7,8 @@ using UnityEngine;
 using System;
 using UnityEngine.UIElements;
 using GT.Elements;
+using GT.Data;
+using System.Linq;
 
 
 [GTEditor(typeof(DialogueGraph))]
@@ -28,6 +30,7 @@ public class DialogueGraphEditor : GTEditorWindow
     {
         return typeof(DialogueGraph);
     }
+
     protected override string GetFileExtension()
     {
         return "asset";

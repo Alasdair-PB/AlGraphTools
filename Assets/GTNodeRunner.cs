@@ -6,10 +6,14 @@ namespace GT
     public class GTNodeRunner : MonoBehaviour
     {
         [SerializeField] private DialogueGraph dataObject;
+        private PerformanceManager performanceManager;
+        private Stage stage;
+        private Interactor interactor;
 
         private void Start()
         {
-            var dialogueNode = dataObject.GetStartingNode();
+            performanceManager = new PerformanceManager(stage, interactor);
+            performanceManager.CreateNewTrackedAct(dataObject.GetStartingAct());
         }
     }
 }
