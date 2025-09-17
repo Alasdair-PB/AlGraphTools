@@ -2,7 +2,6 @@ using UnityEngine;
 using GT.Data;
 using System;
 using System.Collections.Generic;
-using System.Collections;
 
 public interface IStringResult
 {
@@ -24,10 +23,10 @@ public class GTStringConnection : GTNodeConnection
 [Serializable]
 public class GTPerformanceConnection : GTNodeConnection
 {
-    public IPerformanceAct GetConnectedAct()
+    public SequenceAct GetConnectedAct()
     {
-        if (_connectedNode is IPerformanceAct)
-            return ((IPerformanceAct)_connectedNode);
+        if (_connectedNode is SequenceAct)
+            return ((SequenceAct)_connectedNode);
         return null;
     }
 }
@@ -41,13 +40,6 @@ public class DialogueTableGTData : GTNodeData, IStringResult
     {
         return dataTest;
     }
-}
-
-public interface IPerformanceAct
-{
-    public void InvokeAct(TrackedAct trackedAct);
-    public void OnActSkipped(TrackedAct trackedAct);
-    public bool TrySkipNewAct(TrackedAct trackedAct); // Try to skip an act without tracking, if returns false will call invoke
 }
 
 public class Interactor
@@ -89,277 +81,404 @@ public class PerformanceManager
 {
     private Stage stage;
     private Interactor interactor;
+
     public event Action onPerformanceEnd;
     public event Action<float> onPerformanceUpdate;
-    private List<TrackedAct> trackedActs;
-
-    bool parallelActsInProgress = false;
-    private Stack<IPerformanceAct> actStack;
-
+    private TrackedSequence currentSequence;
 
     public PerformanceManager(Stage in_stage, Interactor in_interactor)
     {
         interactor = in_interactor;
         stage = in_stage;
-        trackedActs = new List<TrackedAct>();
-        AddEventBindings();
     }
 
-    private void AddEventBindings()
+    public void SetSequence(SequenceAct act)
     {
-        interactor.onInteractorSkip += SkipPerformance;
-        interactor.onInteractorPause += TogglePerformancePause;
-    }
-
-    private void ClearEventBindings()
-    {
-        interactor.onInteractorSkip -= SkipPerformance;
-        interactor.onInteractorPause -= TogglePerformancePause;
+        TrackedSequence trackedSequence = new TrackedSequence(interactor, stage, this, act);
+        currentSequence = trackedSequence;
     }
 
     public void EndPerformance()
     {
-        EndAllParallelActs();
         onPerformanceEnd?.Invoke();
-        ClearEventBindings();
+        ClearAllBindings();
     }
 
-    public void EndAllParallelActs()
+    public void ClearAllBindings()
     {
-        parallelActsInProgress = true;
-        foreach (TrackedAct trackedAct in trackedActs)
-            trackedAct.FinishAct();
-
-        foreach (IPerformanceAct trackedAct in actStack)
-            CreateNewTrackedAct(trackedAct);
-
-        parallelActsInProgress = false;
-
+        onPerformanceUpdate = null;
+        onPerformanceEnd = null;
     }
 
-    bool SkipNewParallelActs()
-    {
-        bool skipped = false;
-
-        Stack<IPerformanceAct> stack = actStack;
-        actStack = new Stack<IPerformanceAct>();
-        foreach (IPerformanceAct trackedAct in stack)
-        {
-            CreateNewSkippedTrackedAct(trackedAct);
-            skipped = true;
-        }
-        return skipped;
-    }
-
-    // If skipping parallel acts creates new parallel acts skip these also
-    // Note to self this needs to be refactored as parallel actions do not know if one act stopped skip
-    // Should go trhough all new items and check for skip and then skip
-    void SkipAllNewParallelActs()
-    {
-        if (SkipNewParallelActs()) SkipAllNewParallelActs();
-    }
-
-    public void SkipPerformance()
-    {
-        parallelActsInProgress = true;
-        foreach (TrackedAct trackedAct in trackedActs)
-            trackedAct.SkipTrackedAct();
-
-        SkipAllNewParallelActs();
-        parallelActsInProgress = false;
-    }
-
-    public void TogglePerformancePause()
-    {
-        foreach (TrackedAct trackedAct in trackedActs)
-            trackedAct.TogglePauseTrackedAct();
-    }
-
-    public void PauseAllOtherActs(TrackedAct in_trackedAct)
-    {
-        foreach (TrackedAct trackedAct in trackedActs)
-        {
-            if (trackedAct == in_trackedAct) continue;
-            trackedAct.TogglePauseTrackedAct();
-        }
-    }
-
-    private void TrackAct(TrackedAct act)
-    {
-        trackedActs.Add(act);
-        act.onActDestroy += () => RemoveTrackedAct(act);
-        act.InvokeTrackedAct();
-    }
-
-    public void PushNewTrackedActToStack(IPerformanceAct nextAct)
-        => actStack.Push(nextAct);
-    
-    public void CreateNewTrackedAct(IPerformanceAct nextAct)
-    {
-        if (parallelActsInProgress)
-            PushNewTrackedActToStack(nextAct);
-        else
-        {
-            TrackedAct trackedAct = new TrackedAct(interactor, stage, this, nextAct);
-            TrackAct(trackedAct);
-        }
-    }
-
-    public void CreateNewSkippedTrackedAct(IPerformanceAct nextSkippedAct)
-    {
-        if (parallelActsInProgress)
-            PushNewTrackedActToStack(nextSkippedAct);
-        else
-        {
-            TrackedAct trackedAct = new TrackedAct(interactor, stage, this, nextSkippedAct);
-            if (!trackedAct.TrySkipNewAct())
-                TrackAct(trackedAct);
-        }
-    }
-
-    public void RemoveTrackedAct(TrackedAct trackedAct)
-        => trackedActs.Remove(trackedAct);
-    
-    public void Update(float deltaTime) // Exists for acts to add bindings to
+    // Exists for acts to add bindings to
+    public void Update(float deltaTime) 
         => onPerformanceUpdate?.Invoke(deltaTime);
-    
-
+  
 }
 
-public class TrackedAct
+public abstract class Tracker
 {
-    private IPerformanceAct performanceTrackedAct;
-    public event Action onActDestroy;
-    public event Action onActDisabled;
-    public event Action onActEnabled;
+    protected event Action onActDestroy;
+    protected event Action onActDisabled;
+    protected event Action onActEnabled;
+    protected event Action onActSkipped;
 
-    private Interactor interactor;
-    private Stage stage;
-    private PerformanceManager performanceManager;
+    protected event Action onPopUpEnter;
 
-    bool isEnabled;
+    protected Interactor interactor;
+    protected Stage stage;
+    protected PerformanceManager performanceManager;
 
-    public TrackedAct(Interactor in_interactor, Stage in_stage, PerformanceManager in_performanceManager, IPerformanceAct in_performance)
+    protected bool isEnabled;
+    protected bool isDestroyed;
+    protected bool isSkipped;
+    protected bool isInPopUp;
+
+    protected Stack<Action> stackedActions;
+
+    protected bool IsActEnabled() => isEnabled;
+    public Stage GetStage() => stage;
+    protected Interactor GetInteractor() => interactor;
+
+
+    protected void InvokeOnPopUp()
     {
-        interactor = in_interactor;
-        stage = in_stage;
-        performanceTrackedAct = in_performance;
-        performanceManager = in_performanceManager;
-        isEnabled = false;
+        if (!isInPopUp) isInPopUp = true;
+        onPopUpEnter?.Invoke();
     }
 
-    public void CleanTrackedAct()
+    protected void InvokeOnActDestroyed()
     {
-        onActDestroy = null;
-        onActDisabled = null;
-        onActEnabled = null;
-    }
-    public void FinishAct()
-    {
-        if (!isEnabled) onActDisabled?.Invoke();
+        if (isDestroyed) return;
+        isDestroyed = true;
         onActDestroy?.Invoke();
-        CleanTrackedAct();
     }
 
-    public void TogglePauseTrackedAct()
+    protected void InvokeOnActEnabled()
+    {
+        if (isEnabled) return;
+        isEnabled = true;
+        onActEnabled?.Invoke();
+    }
+
+    protected void InvokeOnActDisabled()
+    {
+        if (!isEnabled) return;
+        isEnabled = false;
+        onActDisabled?.Invoke();
+    }
+
+    protected void OnInteractorSkip() {
+        if (isSkipped) return;
+        isSkipped = true;
+        onActSkipped?.Invoke(); 
+    }
+
+    protected void OnInteractorPause()
     {
         isEnabled = !isEnabled;
         if (isEnabled) onActDisabled?.Invoke();
         else onActEnabled?.Invoke();
     }
 
-    public bool IsActEnabled() => isEnabled;
-    public void InvokeTrackedAct() => performanceTrackedAct.InvokeAct(this);
-    public bool TrySkipNewAct() => performanceTrackedAct.TrySkipNewAct(this);
-    public void EndThisAndParallelActs() => performanceManager.EndAllParallelActs();
-    public void EndPerformance() => performanceManager.EndPerformance();
-    public void SkipTrackedAct() => performanceTrackedAct.OnActSkipped(this);
-    public void CreateNewTrackedPerformance(IPerformanceAct performance) => performanceManager.CreateNewTrackedAct(performance);
-    public void CreateNewSkippedTrackedPerformance(IPerformanceAct performance) => performanceManager.CreateNewSkippedTrackedAct(performance);
-    public Stage GetStage() => stage;
-    public Interactor GetInteractor() => interactor;
+    protected void ClearAllActs()
+    {
+        onActDestroy = null;
+        onActDisabled = null;
+        onActEnabled = null;
+        onActSkipped = null;
+
+        isEnabled = true;
+        isSkipped = false;
+        isDestroyed = false;
+    }
 }
 
+public class TrackedSequence : Tracker
+{
+    private SequenceAct sequenceAct;
+    public TrackedSequence(Interactor in_interactor, Stage in_stage, PerformanceManager in_performanceManager, SequenceAct in_sequence)
+    {
+        interactor = in_interactor;
+        stage = in_stage;
+        sequenceAct = in_sequence;
+        performanceManager = in_performanceManager;
+        isEnabled = true;
+
+        SetTrackerBindings();
+        sequenceAct.InvokeSequenceAct(this);
+    }
+
+    private void SetTrackerBindings()
+    {
+        interactor.onInteractorPause += OnInteractorPause;
+        interactor.onInteractorSkip += OnInteractorSkip;
+    }
+
+    private void RemoveTrackerBindings()
+    {
+        interactor.onInteractorSkip -= OnInteractorSkip;
+        interactor.onInteractorPause -= OnInteractorPause;
+    }
+
+    public void AddScrollAction(Action scrollAction)
+    {
+        if (isEnabled) interactor.onInteractorScroll += scrollAction;
+        onActDisabled += () => interactor.onInteractorScroll -= scrollAction;
+        onActEnabled += () => interactor.onInteractorScroll += scrollAction;
+    }
+
+    public void AddSelectAction(Action selectAction)
+    {
+        if (isEnabled) interactor.onInteractorScroll += selectAction;
+        onActDisabled += () => interactor.onInteractorScroll -= selectAction;
+        onActEnabled += () => interactor.onInteractorScroll += selectAction;
+    }
+
+    public void AddSelectIncrementor<T>(Action<T> action, T initValue, Func<T, T> incrementer, Func<T, bool> isComplete, Action onComplete)
+    {
+        if (isComplete(initValue))
+        {
+            if (isEnabled) interactor.onInteractorSelect += onComplete;
+            onActDisabled += () => interactor.onInteractorSelect -= onComplete;
+            onActEnabled += () => interactor.onInteractorSelect += onComplete;
+        }
+        else
+        {
+            T nextValue = incrementer(initValue);
+            Action selectAction = null;
+            selectAction = () =>
+            {
+                action?.Invoke(nextValue);
+                interactor.onInteractorSelect -= selectAction;
+                onActDisabled -= () => interactor.onInteractorSelect -= selectAction;
+                onActEnabled -= () => interactor.onInteractorSelect += selectAction;
+                AddSelectIncrementor(action, nextValue, incrementer, isComplete, onComplete);
+            };
+
+            if (isEnabled) interactor.onInteractorSelect += selectAction;
+            onActDisabled += () => interactor.onInteractorSelect -= selectAction;
+            onActEnabled += () => interactor.onInteractorSelect += selectAction;
+        }
+    }
+
+    public void AddHoverSelectAction(Action scrollAction)
+    {
+        int index = interactor.AddHoverItem();
+        Action<int> onHoverSelect = (int x) =>
+        {
+            if (x == index) scrollAction?.Invoke();
+        };
+
+        if (isEnabled) interactor.onInteractorSelectHoverItem += onHoverSelect;
+        onActDisabled += () => interactor.onInteractorSelectHoverItem -= onHoverSelect;
+        onActEnabled += () => interactor.onInteractorSelectHoverItem += onHoverSelect;
+    }
+
+    public void AddSkipAction(Action skipAction)
+    {
+        onActSkipped += skipAction;
+        onActDestroy += () => onActSkipped -= skipAction;
+    }
+
+    private void OnFirstPopUp()
+    {
+        interactor.onInteractorPause -= OnInteractorPause;
+        interactor.onInteractorSkip -= OnInteractorSkip;
+        InvokeOnActDisabled();
+        isInPopUp = true;
+        InvokeOnPopUp();
+    }
+
+    public void PopUp()
+    {
+        if (isInPopUp)
+            InvokeOnPopUp();
+        else 
+            OnFirstPopUp();
+    }
+
+    /// Commenting this section (shocker IK) it gets complicated quickly and I'm still brainstorming methods
+    // Pauses sequence and all other parallel actions until a requirement is met
+    public Action CreatePopUp()
+    {
+        Action returnFromPopUp = () => ReturnFromPopup();
+        PopUp(); // Tell other popups there is a new popup
+
+        Action endPopUp = null; // Create an action that ends the popup
+        endPopUp += returnFromPopUp;
+
+        Action removePopUp = null; // When a new popup enters remove this popup and add it to stack to read when the new popup has finished
+        removePopUp = () => {
+
+            endPopUp -= returnFromPopUp;
+            onPopUpEnter -= removePopUp;
+
+            stackedActions.Push(()=> { // Add a stack action that re-adds the action to end the popup and re-adds the action to remove this action when a new popup appears
+                endPopUp += returnFromPopUp;
+                onPopUpEnter += removePopUp; 
+            });
+        };
+
+        returnFromPopUp += () => onPopUpEnter -= removePopUp;
+        onPopUpEnter += removePopUp;
+        return endPopUp;
+    }
+
+    private void ReturnFromPopup()
+    {
+        while (stackedActions.Count > 0)
+        {
+            stackedActions.Pop()?.Invoke();
+            return;
+        }
+
+        isInPopUp = false;
+        InvokeOnActEnabled();
+        interactor.onInteractorSkip += OnInteractorSkip;
+        interactor.onInteractorPause += OnInteractorPause;
+    }
+
+    private void KillAllActs()
+    {
+        InvokeOnActDisabled();
+        InvokeOnActDestroyed();// End all parallel and sequence acts (only effects sequence and parallel acts)
+        ClearAllActs();// Clears all parallel and sequence act bindings, note: tracker bindings still exist
+    }
+
+    // Design consideration:
+    // end parallel actions => trigger new parallel actions => then end sequence?
+    // or trigger new paralle actions => end all parallel actions => end sequence?
+    // Key question Do we want overlays to exist during new triggers- defaulting to first option as InvokeParallelActs can be called on sequence
+    // before calling Endsequence to get both results.
+
+    // Current issue-> the pop up stack.
+    // => How to invoke next sequence if parallel actions trigger a stack that can trigger more stacks and delay parallal actions until the stack ends
+    // I.e dialogue=> end performance => do you want to save [popup] => the game has been saved [popup] => trigger other parallel actions => set next performance
+
+    public void EndSequence(SequenceAct nextSequence = null, List<ParallelAct> parallelActs = null)
+    {
+        KillAllActs();
+        if (parallelActs != null) InvokeParallelActs(parallelActs);
+
+        if (isEnabled) // If disabled in parallel act
+            InvokeNextSequence(nextSequence);
+        else
+            onActEnabled += () =>
+            {
+                InvokeNextSequence(nextSequence);
+            };
+    }
+
+    // Kills this sequence and sets next one
+    private void InvokeNextSequence(SequenceAct nextSequence)
+    {
+        KillAllActs();
+
+        RemoveTrackerBindings();
+        if (nextSequence != null) performanceManager.SetSequence(nextSequence);
+
+    }
+
+    public void InvokeParallelActs(List<ParallelAct> parallelActs)
+    {
+        if (parallelActs == null) return;
+        ParallelTracker parallelTracker = new ParallelTracker(this);
+
+        foreach (ParallelAct act in parallelActs)
+        {
+            if (act == null) continue;
+            act.InvokeParallelAct(parallelTracker);
+        }
+    }
+}
+
+// Sequence Tracker wrapper for parallel acts that hides method like end performance. 
+public class ParallelTracker
+{
+    private TrackedSequence sequenceTracker;
+    public ParallelTracker(TrackedSequence in_trackedSequence)
+    {
+        sequenceTracker = in_trackedSequence;
+    }
+
+
+
+}
+
+
+public abstract class SequenceAct : GTNodeData
+{
+    public abstract void InvokeSequenceAct(TrackedSequence trackedSequence);
+    public abstract void InvokeAsSkippedAct(TrackedSequence trackedSequence);
+}
+
+public abstract class ParallelAct : GTNodeData
+{
+    public abstract void InvokeParallelAct(ParallelTracker trackedSequence);
+    public abstract void InvokeAsSkippedAct(ParallelTracker trackedSequence);
+}
+
+
 [Serializable]
-public class DialogueAct : GTNodeData, IPerformanceAct 
+public class DialogueAct : SequenceAct
 {
     [field: SerializeField] public GTStringConnection stringPort; // will need new interafe: IMultiConnection for structs with multiple connections
     [field: SerializeField] public GTPerformanceConnection nextAct; // <= These can be lists now
 
-    public void InvokeAct(TrackedAct trackedAct)
+    public override void InvokeSequenceAct(TrackedSequence trackedAct)
     {
         AddAllBindings(trackedAct);
         trackedAct.GetStage().CallDrawDialogue(stringPort.GetStringResult());
     }
 
-    // Return false if cannot be skipped, otherwise return true and add skip logic 
-    public bool TrySkipNewAct(TrackedAct trackedAct)
+    public override void InvokeAsSkippedAct(TrackedSequence trackedAct)
     {
-        CreateSkippedNextAct(trackedAct);
-        return true;
+        OnPerformanceSkipped(trackedAct);
     }
 
-    public void OnActSkipped(TrackedAct trackedAct)
+    private void AddAllBindings(TrackedSequence trackedAct)
     {
-        // Should finish all current acts first?
-        CreateSkippedNextAct(trackedAct);
-        trackedAct.FinishAct();
+        trackedAct.AddSkipAction(() => OnPerformanceSkipped(trackedAct));
+        trackedAct.AddSelectIncrementor<int>((int i) => DrawTable(trackedAct, i), 0, (int i) => i++, (int i) => i > 5, () => OnPerformanceEnd(trackedAct));
     }
 
-    private void CreateSkippedNextAct(TrackedAct trackedAct)
+    void DrawTable(TrackedSequence trackedAct, int lineIndex)
     {
-        IPerformanceAct nextPerformanceAct = nextAct.GetConnectedAct();
-        if (nextPerformanceAct != null) 
-            trackedAct.CreateNewSkippedTrackedPerformance(nextPerformanceAct);
+
     }
 
-    private void AddAllBindings(TrackedAct trackedAct)
+    private void OnPerformanceSkipped(TrackedSequence trackedAct)
     {
-        Interactor interactor = trackedAct.GetInteractor();
-        Action onScroll = () => OnInteractorScroll(trackedAct);
-        Action onSelect = () => OnInteractorSelect(trackedAct);
-
-        interactor.onInteractorScroll += onScroll;
-        interactor.onInteractorSelect += onSelect;
-
-        trackedAct.onActDisabled += () => interactor.onInteractorScroll -= onScroll;
-        trackedAct.onActDisabled += () => interactor.onInteractorSelect -= onSelect;
-
-        trackedAct.onActEnabled += () => interactor.onInteractorScroll += onScroll;
-        trackedAct.onActEnabled += () => interactor.onInteractorSelect += onSelect;
-
-        // Hover item sample- foreach choice add hover item to OnInteractorSelect with next IDialogue et al
-        /*int index = interactor.AddHoverItem();
-        Action<int> onHoverSelect = (int x) =>
-        {
-            if (x == index) OnInteractorSelect(trackedAct);
-        };*/
-        // end sample
+        SequenceAct nextPerformanceAct = nextAct.GetConnectedAct();
+        trackedAct.EndSequence(nextPerformanceAct); //End skipped sequence?
     }
 
-    private void OnActUpdate(float deltaTime, TrackedAct trackedAct)
+    private void OnPerformanceEnd(TrackedSequence trackedAct)
+    {
+        SequenceAct nextPerformanceAct = nextAct.GetConnectedAct();
+        trackedAct.EndSequence(nextPerformanceAct);
+    }
+}
+
+
+/*
+ * 
+    private void OnActUpdate(float deltaTime, TrackedSequence trackedAct)
     {
         if (trackedAct.IsActEnabled())
         {
             // might be a quick time event or moving UI e.t.c
         }
-    }
+    }*/
 
-    private void OnInteractorScroll(TrackedAct trackedAct)
-    {
-        // Could be a sound effect e.t.c
-    }
 
-    private void OnInteractorSelect(TrackedAct trackedAct)
-    {
-        IPerformanceAct nextPerformanceAct = nextAct.GetConnectedAct();
 
-        if (nextPerformanceAct != null)
-        {
-            trackedAct.EndThisAndParallelActs(); // Use End parallel and this act or just finish act by context
-            trackedAct.CreateNewTrackedPerformance(nextAct.GetConnectedAct());
-        } else
-            trackedAct.EndPerformance();
-        
-    }
-}
+
+
+
+
+
+
+
+

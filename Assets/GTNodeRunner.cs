@@ -13,7 +13,7 @@ namespace GT
         private void Start()
         {
             performanceManager = new PerformanceManager(stage, interactor);
-            performanceManager.CreateNewTrackedAct(dataObject.GetStartingAct());
+            //performanceManager.CreateNewTrackedAct(dataObject.GetStartingAct());
         }
     }
 }

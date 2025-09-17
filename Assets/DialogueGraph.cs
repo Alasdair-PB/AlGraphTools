@@ -7,7 +7,7 @@ using System.Linq;
 
 public class DialogueGraph : GTGraph {
 
-    public IPerformanceAct GetStartingAct() => startingNode.GetConnectedAct();
+    public SequenceAct GetStartingAct() => startingNode.GetConnectedAct();
 
     [field: SerializeField] private GTPerformanceConnection startingNode;
 
