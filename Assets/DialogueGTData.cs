@@ -2,6 +2,8 @@ using UnityEngine;
 using GT.Data;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 
 public interface IStringResult
 {
@@ -51,26 +53,42 @@ public class Interactor
     public event Action<int> onInteractorSelectHoverItem;
 
     public List<int> hoverItems;
-
-    private int hoverCount; // Interactions that can be hovered over
+    private int hoverIndex;
 
     public Interactor()
     {
         hoverItems = new List<int>();
+        hoverIndex = 0;
     }
 
+    public void ScrollHoverItem()
+    {
+        onInteractorScroll?.Invoke();
+        hoverIndex = (hoverIndex + 1 < hoverItems.Count) ? hoverIndex + 1 : 0;
+    }
+
+    public void SelectHoverItem()
+    {
+        int hoverCount = hoverItems.Count;
+        if (hoverCount > 0 && hoverCount > hoverIndex)
+            onInteractorSelectHoverItem?.Invoke(hoverItems[hoverIndex]);
+        else
+            onInteractorSelect?.Invoke();
+    }
+    private int GetNewHoverItem()
+        => hoverItems.Count == 0 ? 0 : hoverItems.Max() + 1;
+    
     public int AddHoverItem()
     {
-        hoverItems.Add(0); // new index
-        // return hover index;
-        return 0;
+        int item = GetNewHoverItem();
+        hoverItems.Add(item);
+        return item;
     }
 }
 
 public class Stage
 {
     public event Action<string> onDrawDialogue; // will be table
-
     public void CallDrawDialogue(string text)
     {
         onDrawDialogue?.Invoke(text);
@@ -123,8 +141,6 @@ public abstract class Tracker
     protected event Action onActEnabled;
     protected event Action onActSkipped;
 
-    protected event Action onPopUpEnter;
-
     protected Interactor interactor;
     protected Stage stage;
     protected PerformanceManager performanceManager;
@@ -132,20 +148,10 @@ public abstract class Tracker
     protected bool isEnabled;
     protected bool isDestroyed;
     protected bool isSkipped;
-    protected bool isInPopUp;
-
-    protected Stack<Action> stackedActions;
 
     protected bool IsActEnabled() => isEnabled;
     public Stage GetStage() => stage;
     protected Interactor GetInteractor() => interactor;
-
-
-    protected void InvokeOnPopUp()
-    {
-        if (!isInPopUp) isInPopUp = true;
-        onPopUpEnter?.Invoke();
-    }
 
     protected void InvokeOnActDestroyed()
     {
@@ -177,8 +183,8 @@ public abstract class Tracker
     protected void OnInteractorPause()
     {
         isEnabled = !isEnabled;
-        if (isEnabled) onActDisabled?.Invoke();
-        else onActEnabled?.Invoke();
+        if (isEnabled) onActEnabled?.Invoke();
+        else onActDisabled?.Invoke();
     }
 
     protected void ClearAllActs()
@@ -230,36 +236,48 @@ public class TrackedSequence : Tracker
 
     public void AddSelectAction(Action selectAction)
     {
-        if (isEnabled) interactor.onInteractorScroll += selectAction;
-        onActDisabled += () => interactor.onInteractorScroll -= selectAction;
-        onActEnabled += () => interactor.onInteractorScroll += selectAction;
+        if (isEnabled) interactor.onInteractorSelect += selectAction;
+        onActDisabled += () => interactor.onInteractorSelect -= selectAction;
+        onActEnabled += () => interactor.onInteractorSelect += selectAction;
     }
 
+    // A lot of events were captured, but not harmed, to make this function work o7 
     public void AddSelectIncrementor<T>(Action<T> action, T initValue, Func<T, T> incrementer, Func<T, bool> isComplete, Action onComplete)
     {
         if (isComplete(initValue))
         {
+            Action onDisable = () => interactor.onInteractorSelect -= onComplete;
+            Action onEnable = () => interactor.onInteractorSelect += onComplete;
+
             if (isEnabled) interactor.onInteractorSelect += onComplete;
-            onActDisabled += () => interactor.onInteractorSelect -= onComplete;
-            onActEnabled += () => interactor.onInteractorSelect += onComplete;
+            onActDisabled += onDisable;
+            onActEnabled += onEnable;
         }
         else
         {
             T nextValue = incrementer(initValue);
             Action selectAction = null;
+            Action onDisable = () => interactor.onInteractorSelect -= selectAction;
+            Action onEnable = () => interactor.onInteractorSelect += selectAction;
+
             selectAction = () =>
             {
                 action?.Invoke(nextValue);
                 interactor.onInteractorSelect -= selectAction;
-                onActDisabled -= () => interactor.onInteractorSelect -= selectAction;
-                onActEnabled -= () => interactor.onInteractorSelect += selectAction;
+                onActDisabled -= onDisable;
+                onActEnabled -= onEnable;
                 AddSelectIncrementor(action, nextValue, incrementer, isComplete, onComplete);
             };
 
             if (isEnabled) interactor.onInteractorSelect += selectAction;
-            onActDisabled += () => interactor.onInteractorSelect -= selectAction;
-            onActEnabled += () => interactor.onInteractorSelect += selectAction;
+            onActDisabled += onDisable;
+            onActEnabled += onEnable;
         }
+    }
+
+    public void AddOnUpdateAction(Action<float> updateAction)
+    {
+
     }
 
     public void AddHoverSelectAction(Action scrollAction)
@@ -281,64 +299,6 @@ public class TrackedSequence : Tracker
         onActDestroy += () => onActSkipped -= skipAction;
     }
 
-    private void OnFirstPopUp()
-    {
-        interactor.onInteractorPause -= OnInteractorPause;
-        interactor.onInteractorSkip -= OnInteractorSkip;
-        InvokeOnActDisabled();
-        isInPopUp = true;
-        InvokeOnPopUp();
-    }
-
-    public void PopUp()
-    {
-        if (isInPopUp)
-            InvokeOnPopUp();
-        else 
-            OnFirstPopUp();
-    }
-
-    /// Commenting this section (shocker IK) it gets complicated quickly and I'm still brainstorming methods
-    // Pauses sequence and all other parallel actions until a requirement is met
-    public Action CreatePopUp()
-    {
-        Action returnFromPopUp = () => ReturnFromPopup();
-        PopUp(); // Tell other popups there is a new popup
-
-        Action endPopUp = null; // Create an action that ends the popup
-        endPopUp += returnFromPopUp;
-
-        Action removePopUp = null; // When a new popup enters remove this popup and add it to stack to read when the new popup has finished
-        removePopUp = () => {
-
-            endPopUp -= returnFromPopUp;
-            onPopUpEnter -= removePopUp;
-
-            stackedActions.Push(()=> { // Add a stack action that re-adds the action to end the popup and re-adds the action to remove this action when a new popup appears
-                endPopUp += returnFromPopUp;
-                onPopUpEnter += removePopUp; 
-            });
-        };
-
-        returnFromPopUp += () => onPopUpEnter -= removePopUp;
-        onPopUpEnter += removePopUp;
-        return endPopUp;
-    }
-
-    private void ReturnFromPopup()
-    {
-        while (stackedActions.Count > 0)
-        {
-            stackedActions.Pop()?.Invoke();
-            return;
-        }
-
-        isInPopUp = false;
-        InvokeOnActEnabled();
-        interactor.onInteractorSkip += OnInteractorSkip;
-        interactor.onInteractorPause += OnInteractorPause;
-    }
-
     private void KillAllActs()
     {
         InvokeOnActDisabled();
@@ -346,38 +306,22 @@ public class TrackedSequence : Tracker
         ClearAllActs();// Clears all parallel and sequence act bindings, note: tracker bindings still exist
     }
 
-    // Design consideration:
-    // end parallel actions => trigger new parallel actions => then end sequence?
-    // or trigger new paralle actions => end all parallel actions => end sequence?
-    // Key question Do we want overlays to exist during new triggers- defaulting to first option as InvokeParallelActs can be called on sequence
-    // before calling Endsequence to get both results.
-
-    // Current issue-> the pop up stack.
-    // => How to invoke next sequence if parallel actions trigger a stack that can trigger more stacks and delay parallal actions until the stack ends
-    // I.e dialogue=> end performance => do you want to save [popup] => the game has been saved [popup] => trigger other parallel actions => set next performance
-
+    // Ends the sequence then triggers onEnd parallel acts before setting the next sequence. 
+    // Why not just leave the sequence to call InvokeParallelActs before ending the sequence?  =>
+        // Some tracked parallel actions should finish when the sequence ends before onEnd parallel acts are called.
+        // Such as dialoague narration => onEnd sound effect. 
     public void EndSequence(SequenceAct nextSequence = null, List<ParallelAct> parallelActs = null)
     {
         KillAllActs();
         if (parallelActs != null) InvokeParallelActs(parallelActs);
-
-        if (isEnabled) // If disabled in parallel act
-            InvokeNextSequence(nextSequence);
-        else
-            onActEnabled += () =>
-            {
-                InvokeNextSequence(nextSequence);
-            };
+        InvokeNextSequence(nextSequence);
     }
 
-    // Kills this sequence and sets next one
     private void InvokeNextSequence(SequenceAct nextSequence)
     {
-        KillAllActs();
-
+        KillAllActs(); // Kill all acts in case any parallel actions are tracked
         RemoveTrackerBindings();
         if (nextSequence != null) performanceManager.SetSequence(nextSequence);
-
     }
 
     public void InvokeParallelActs(List<ParallelAct> parallelActs)
@@ -401,9 +345,6 @@ public class ParallelTracker
     {
         sequenceTracker = in_trackedSequence;
     }
-
-
-
 }
 
 
@@ -460,17 +401,6 @@ public class DialogueAct : SequenceAct
         trackedAct.EndSequence(nextPerformanceAct);
     }
 }
-
-
-/*
- * 
-    private void OnActUpdate(float deltaTime, TrackedSequence trackedAct)
-    {
-        if (trackedAct.IsActEnabled())
-        {
-            // might be a quick time event or moving UI e.t.c
-        }
-    }*/
 
 
 
