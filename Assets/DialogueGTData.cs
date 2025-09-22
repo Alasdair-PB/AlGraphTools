@@ -2,7 +2,6 @@ using UnityEngine;
 using GT.Data;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 
 public interface IStringResult
@@ -348,6 +347,10 @@ public class ParallelTracker
 }
 
 
+// Why Invoke and Invoke skipped =>
+// Sequences are one time triggers that are tracked by event calls. All connections are established during the Invoke so no other methods are needed
+// Invoke AsSkipped is however needed as some acts will be skipped all together when skipped meaning we can avoid bindings entirely 
+
 public abstract class SequenceAct : GTNodeData
 {
     public abstract void InvokeSequenceAct(TrackedSequence trackedSequence);
@@ -366,6 +369,7 @@ public class DialogueAct : SequenceAct
 {
     [field: SerializeField] public GTStringConnection stringPort; // will need new interafe: IMultiConnection for structs with multiple connections
     [field: SerializeField] public GTPerformanceConnection nextAct; // <= These can be lists now
+    //[field: SerializeReference] public GTPortConnection<int> newAct; // Sadly not support in unity
 
     public override void InvokeSequenceAct(TrackedSequence trackedAct)
     {
@@ -386,7 +390,8 @@ public class DialogueAct : SequenceAct
 
     void DrawTable(TrackedSequence trackedAct, int lineIndex)
     {
-
+        string text = stringPort.GetStringResult();
+        trackedAct.GetStage().CallDrawDialogue(text);
     }
 
     private void OnPerformanceSkipped(TrackedSequence trackedAct)
@@ -401,14 +406,3 @@ public class DialogueAct : SequenceAct
         trackedAct.EndSequence(nextPerformanceAct);
     }
 }
-
-
-
-
-
-
-
-
-
-
-

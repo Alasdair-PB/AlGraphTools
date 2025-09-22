@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+
 public class DialogueGraph : GTGraph {
 
     public SequenceAct GetStartingAct() => startingNode.GetConnectedAct();

@@ -26,11 +26,6 @@ public class DialogueGraphEditor : GTEditorWindow
         base.Initialize();
     }
 
-    protected override Type GetGraphType()
-    {
-        return typeof(DialogueGraph);
-    }
-
     protected override string GetFileExtension()
     {
         return "asset";

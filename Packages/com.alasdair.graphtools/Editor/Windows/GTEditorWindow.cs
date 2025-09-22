@@ -16,6 +16,8 @@ namespace GT.Windows
     public abstract class GTEditorWindow : EditorWindow
     {
         private GTGraphView graphView;
+        private GTIOUtility loadManager;
+
         private readonly string defaultFileName = "NodesFileName";
         private readonly string defaultFilePath = "Assets/";
 
@@ -24,7 +26,6 @@ namespace GT.Windows
 
         private Button saveButton;
         private Button miniMapButton;
-        private GTIOUtility loadManager;
         private bool isInitialized = false;
 
         public static void Open(GTGraph graphAsset, string assetPath)
@@ -59,8 +60,15 @@ namespace GT.Windows
             }
         }
         public abstract List<Type> GetCustomNodeTypes();
-        protected abstract Type GetGraphType();
         protected abstract string GetFileExtension();
+        protected virtual Type GetGraphType()
+        {
+            var attr = (GTEditorAttribute) Attribute.GetCustomAttribute(
+                GetType(),
+                typeof(GTEditorAttribute)
+            );
+            return attr?.GraphType;
+        }
 
         protected virtual void Initialize()
         {

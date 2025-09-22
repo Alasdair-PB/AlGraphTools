@@ -8,8 +8,8 @@ using UnityEngine.UIElements;
 namespace GT.Elements
 {
     using Utilities;
-    using Windows;
 
+    // Node for Dialogue Table SO that can be referenced as a String connection port. 
     [NodeForData(typeof(DialogueTableGTData))]
     public class GTDialogueTable : GTNode, IStringResult
     {
@@ -17,7 +17,7 @@ namespace GT.Elements
         public override bool OnEdgeConnected(Edge edge)
         {
             if (CanEdgeConnect<GTStringConnection>(edge)) return true;
-            return true;
+            return false;
         }
 
         public override void OnAwake()
@@ -50,7 +50,7 @@ namespace GT.Elements
         public override void OnAwake()
         {
             if (!(nodeData is DialogueAct)) return;
-            DialogueAct nodeDData = (DialogueAct)nodeData;
+            DialogueAct nodeDData = (DialogueAct) nodeData;
             nodeDData.stringPort = null;
         }
 
@@ -59,7 +59,7 @@ namespace GT.Elements
             if (!(nodeData is DialogueAct)) return;
             DialogueAct nodeDData = (DialogueAct)nodeData;
 
-            Port outPort = this.CreatePort(nodeDData.stringPort == null ? "Out port" : nodeDData.stringPort.GetStringResult());//(string) nodeDData.choiceData.GetValue()
+            Port outPort = this.CreatePort(nodeDData.stringPort == null ? "Out port" : nodeDData.stringPort.GetStringResult());
             outPort.userData = nodeDData.stringPort;
             outputContainer.Add(outPort);
 

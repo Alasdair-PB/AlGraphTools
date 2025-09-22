@@ -15,8 +15,8 @@ MonoBehaviour:
   <FileName>k__BackingField: NodesFileName
   <Groups>k__BackingField: []
   <Nodes>k__BackingField:
-  - rid: 5101683659936890882
-  - rid: 5101683659936890883
+  - rid: 5101683886885437440
+  - rid: 5101683886885437441
   <OldGroupNames>k__BackingField: []
   <OldUngroupedNodeNames>k__BackingField: []
   <OldGroupedNodeNames>k__BackingField:
@@ -29,24 +29,24 @@ MonoBehaviour:
     RefIds:
     - rid: -2
       type: {class: , ns: , asm: }
-    - rid: 5101683659936890882
+    - rid: 5101683886885437440
       type: {class: DialogueAct, ns: , asm: Assembly-CSharp}
       data:
-        nodeGuid: 7c98bb84-1a6f-4280-a870-6722134571e3
+        nodeGuid: be95b412-ce7f-4c38-85db-6b1972c460db
         connectedGuids: []
         <Name>k__BackingField: a
         <GroupID>k__BackingField: 
         <Position>k__BackingField: {x: 230, y: 157}
         stringPort:
           _connectedNode:
-            rid: 5101683659936890883
+            rid: 5101683886885437441
         nextAct:
           _connectedNode:
             rid: -2
-    - rid: 5101683659936890883
+    - rid: 5101683886885437441
       type: {class: DialogueTableGTData, ns: , asm: Assembly-CSharp}
       data:
-        nodeGuid: fc7dfdc5-8217-4387-8338-822129a895c0
+        nodeGuid: 446579ff-56b0-4018-911d-9f8cde450513
         connectedGuids: []
         <Name>k__BackingField: b
         <GroupID>k__BackingField: 

@@ -26,5 +26,6 @@ namespace GT.Data.Save
             Groups = new List<GTGroupSaveData>();
             Nodes = new List<GTNodeData>();
         }
+
     }
 }
